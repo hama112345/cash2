@@ -58,7 +58,11 @@ const COLS = [
   'lifetimeIncome', 'careerStartAge', 'careerYears',
   // --- v1.5.0 で追加（③の資産内訳と④の老後支出）---
   'ast_invest', 'ast_dc', 'ast_insurance', 'operationalAssets',
-  'retireMonthlyExp', 'retireAnnualExp', 'retireDropped'
+  'retireMonthlyExp', 'retireAnnualExp', 'retireDropped',
+  // --- v1.6.0 で追加（借入を種類別に分離。既存列を守るため末尾に追加）---
+  'has_debt', 'debt_student', 'debt_car', 'debt_card', 'debt_other', 'debt_mortgage',
+  'fx_student', 'fx_car_loan', 'fx_card_loan', 'fx_other_loan',
+  'debtPaymentRate', 'debtCondition', 'debtMessage'
 ];
 
 
@@ -148,8 +152,10 @@ function estimateRetirementExpense(d, monthlyTotalExp) {
   let cut = 0;
 
   if (n(d.vr_edu) > 0)          { cut += n(d.vr_edu);          dropped.push('教育費'); }
-  if (n(d.fx_scholarship) > 0)  { cut += n(d.fx_scholarship);  dropped.push('奨学金返済'); }
-  if (n(d.fx_loan) > 0)         { cut += n(d.fx_loan);         dropped.push('ローン返済'); }
+  const studentPay = n(d.fx_student) || n(d.fx_scholarship);
+  const otherDebtPay = n(d.fx_car_loan) + n(d.fx_card_loan) + n(d.fx_other_loan) || n(d.fx_loan);
+  if (studentPay > 0)            { cut += studentPay;            dropped.push('奨学金返済'); }
+  if (otherDebtPay > 0)          { cut += otherDebtPay;          dropped.push('ローン返済'); }
   if (d.housing === '持ち家（住宅ローン返済中）' && n(d.fx_rent) > 0) {
     cut += n(d.fx_rent);
     dropped.push('住宅ローン');
@@ -514,7 +520,8 @@ function judge(d) {
   // 「現在の年収 × 勤続年数」ではなく、賃金カーブで過去の収入を割り戻して累計する
   const career         = estimateLifetimeIncome(annualIncome, userAge, workingYears, d.gender);
   const lifetimeIncome = career.total;
-  const conversionRate = lifetimeIncome > 0 ? (netWorth / lifetimeIncome) * 100 : 0;
+  // 借入残高はここでは差し引かない。資産形成の努力と返済状態を混ぜないため。
+  const conversionRate = lifetimeIncome > 0 ? (totalAssets / lifetimeIncome) * 100 : 0;
 
   let score1 = 0, text1 = '', class1 = '';
   const careerYears = career.years;
@@ -569,13 +576,13 @@ function judge(d) {
   else if (operationalAssets > 0)   { efficiencyRate = 100; }
 
   let score3 = 0, text3 = '', class3 = '';
-  if (netWorth < 3000000) {
+  if (totalAssets < 3000000) {
     if (effBase <= 0 && operationalAssets === 0)              { score3 = 5; text3 = '優良(現金重視)';      class3 = 'eval-5'; }
     else if (efficiencyRate >= 10 && efficiencyRate <= 20)    { score3 = 4; text3 = '良好';                class3 = 'eval-4'; }
     else if (efficiencyRate >= 5 && efficiencyRate < 10)      { score3 = 3; text3 = '標準';                class3 = 'eval-3'; }
     else if (operationalAssets === 0)                         { score3 = 1; text3 = '要改善(投資未着手)';  class3 = 'eval-1'; }
     else                                                      { score3 = 2; text3 = '注意(現金不足)';      class3 = 'eval-2'; }
-  } else if (netWorth < 10000000) {
+  } else if (totalAssets < 10000000) {
     if (efficiencyRate >= 30)      { score3 = 5; text3 = '優良';   class3 = 'eval-5'; }
     else if (efficiencyRate >= 20) { score3 = 4; text3 = '良好';   class3 = 'eval-4'; }
     else if (efficiencyRate >= 10) { score3 = 3; text3 = '標準';   class3 = 'eval-3'; }
@@ -603,7 +610,7 @@ function judge(d) {
   const requiredAssetsForFire  = Math.max(requiredFromGap, requiredFloor);
   const floorApplied           = requiredFloor > requiredFromGap;
   const fireProgressRate       = requiredAssetsForFire > 0
-    ? (netWorth / requiredAssetsForFire) * 100
+    ? (totalAssets / requiredAssetsForFire) * 100
     : 0;
 
   // 想定年金が支出を上回る場合は「必要資産ゼロ＝目標達成」となってしまう。
@@ -617,6 +624,41 @@ function judge(d) {
   else if (fireProgressRate >= 30) { score4 = 3; text4 = '標準的';   class4 = 'eval-3'; }
   else if (fireProgressRate >= 10) { score4 = 2; text4 = '要改善';   class4 = 'eval-2'; }
   else                             { score4 = 1; text4 = '準備不足'; class4 = 'eval-1'; }
+
+  // --- 借入・返済コンディション（4指標とは別表示。総合点には含めない）------------
+  const debtStudent = num(d.debt_student);
+  const debtCar = num(d.debt_car);
+  const debtCard = num(d.debt_card);
+  const debtOther = num(d.debt_other);
+  const mortgageBalance = num(d.debt_mortgage);
+  const nonHousingDebt = debtStudent + debtCar + debtCard + debtOther;
+  const monthlyDebtPayment = (num(d.fx_student) || num(d.fx_scholarship))
+    + num(d.fx_car_loan) + num(d.fx_card_loan) + num(d.fx_other_loan);
+  const debtPaymentRate = annualIncome > 0 ? monthlyDebtPayment * 12 / annualIncome * 100 : 0;
+  const scholarshipOnly = debtStudent > 0 && debtCar === 0 && debtCard === 0 && debtOther === 0;
+
+  let debtCondition = '借入なし', debtMessage = '現在、住宅以外の借入はありません。', debtClass = 'eval-5';
+  if (nonHousingDebt > 0 || mortgageBalance > 0) {
+    if (debtCard > 0) {
+      debtCondition = '高金利の借入を優先確認'; debtClass = 'eval-1';
+      debtMessage = 'カードローン・リボは金利が高い場合があります。資産運用より先に、金利と返済計画の確認をおすすめします。';
+    } else if (debtPaymentRate > 20) {
+      debtCondition = '返済負担が大きめ'; debtClass = 'eval-1';
+      debtMessage = '毎月の返済が手取り収入を圧迫している可能性があります。借換えや返済期間を含めた見直しをご検討ください。';
+    } else if (debtPaymentRate > 10) {
+      debtCondition = '返済と貯蓄のバランスに注意'; debtClass = 'eval-2';
+      debtMessage = '返済を続けながら、生活防衛資金も確保できているか確認しましょう。';
+    } else if (nonHousingDebt === 0 && mortgageBalance > 0) {
+      debtCondition = '住宅ローン返済中'; debtClass = 'eval-3';
+      debtMessage = '住宅ローンは対応する住宅資産があるため、金融資産の評価からは差し引いていません。毎月の住居費として家計収支に反映しています。';
+    } else if (scholarshipOnly) {
+      debtCondition = '奨学金を計画的に返済中'; debtClass = 'eval-4';
+      debtMessage = '奨学金は教育のための借入として扱い、資産形成の評価からは差し引いていません。現在の返済負担は比較的抑えられています。';
+    } else {
+      debtCondition = '無理のない範囲で返済中'; debtClass = 'eval-4';
+      debtMessage = '借入残高だけで悪く評価せず、毎月の返済負担を中心に確認しています。';
+    }
+  }
 
   // --- 総合判定 ------------------------------------------------------------
   const totalScore = (score1 + score2 + score3 + score4) / 4;
@@ -641,7 +683,7 @@ function judge(d) {
   } else {
     typeName   = '⚠️ 赤信号！基礎力改善が急務な家計';
     badgeColor = 'linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)';
-    msg        = '収入に対して支出や負債が多く、早急な家計の見直しが必要な状態です。まずは止血（赤字解消）して「残す力」を取り戻し、防衛資金（現金）を貯める基礎固めから伴走します！';
+    msg        = '収入に対して支出が多く、早急な家計の見直しが必要な状態です。まずは止血（赤字解消）して「残す力」を取り戻し、防衛資金（現金）を貯める基礎固めから伴走します！';
   }
 
   const r1 = v => Math.round(Math.max(0, v) * 10) / 10;
@@ -701,6 +743,15 @@ function judge(d) {
     operationalAssets:  operationalAssets,
     livingDefenseFund:  livingDefenseFund,
 
+    // 借入・返済コンディション（総合点には含めない）
+    nonHousingDebt:     nonHousingDebt,
+    mortgageBalance:   mortgageBalance,
+    monthlyDebtPayment: monthlyDebtPayment,
+    debtPaymentRate:   r1(debtPaymentRate),
+    debtCondition:     debtCondition,
+    debtMessage:       debtMessage,
+    debtClass:         debtClass,
+
     score1: score1, text1: text1, class1: class1,
     score2: score2, text2: text2, class2: class2,
     score3: score3, text3: text3, class3: class3,
@@ -755,6 +806,23 @@ function getSheet() {
     sh.getRange(1, 1, 1, COLS.length)
       .setFontWeight('bold')
       .setBackground('#e2e8f0');
+  } else {
+    // 既存シートへ末尾列を追加した場合、空いている見出しだけを自動補完する。
+    // 既存の列名やデータは上書きしない。
+    const headers = sh.getRange(1, 1, 1, COLS.length).getValues()[0];
+    let headerChanged = false;
+    for (let i = 0; i < COLS.length; i++) {
+      if (headers[i] === '' || headers[i] === null) {
+        headers[i] = COLS[i];
+        headerChanged = true;
+      }
+    }
+    if (headerChanged) {
+      sh.getRange(1, 1, 1, COLS.length).setValues([headers]);
+      sh.getRange(1, 1, 1, COLS.length)
+        .setFontWeight('bold')
+        .setBackground('#e2e8f0');
+    }
   }
   return sh;
 }

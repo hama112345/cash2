@@ -466,7 +466,7 @@
         const CONFIG = {
             endpoint:       'https://script.google.com/macros/s/AKfycbwgldxZN5HQGHp9OvU6UhV6LGcqPKeolzozX7hDAQBay35HA3PMcJQOOgMji5bupyaK/exec',
             token:          'test',
-            appVersion:     'v1.5.0',
+            appVersion:     'v1.6.0',
             consentVersion: '2026-09-21'
         };
 
@@ -583,7 +583,16 @@
                         <div class="input-group"><span class="input-label">iDeCo・企業型DC・持株会</span><div class="input-field-wrap"><input type="number" id="ast_dc" placeholder="0" step="0.1"> 万円</div></div>
                         <div class="input-group"><span class="input-label">貯蓄型保険 <span class="attr-note">※現時点の解約返戻金</span></span><div class="input-field-wrap"><input type="number" id="ast_insurance" placeholder="0" step="0.1"> 万円</div></div>
                         <div class="input-group"><span class="input-label">その他の金融資産</span><div class="input-field-wrap"><input type="number" id="ast_other" placeholder="0" step="0.1"> 万円</div></div>
-                        <div class="input-group"><span class="input-label">各種ローン・奨学金<br><span class="attr-note">※残高総額（住宅ローン除く）</span></span><div class="input-field-wrap"><input type="number" id="debt_total" placeholder="0" step="0.1"> 万円</div></div>
+
+                        <div class="form-section-title">借入状況 <span class="attr-note">※資産形成とは分けて評価します</span></div>
+                        <div class="input-group sel"><span class="input-label">現在、返済中の借入はありますか？</span><div class="input-field-wrap"><select id="has_debt" onchange="onDebtChange()" required><option value="" selected disabled>選択してください</option><option value="なし">なし</option><option value="あり">あり</option></select></div></div>
+                        <div id="debt-details" style="display:none;">
+                            <div class="input-group"><span class="input-label">奨学金 残高<br><span class="attr-note">※教育のための借入として別評価</span></span><div class="input-field-wrap"><input type="number" id="debt_student" placeholder="0" step="0.1"> 万円</div></div>
+                            <div class="input-group"><span class="input-label">自動車ローン 残高</span><div class="input-field-wrap"><input type="number" id="debt_car" placeholder="0" step="0.1"> 万円</div></div>
+                            <div class="input-group"><span class="input-label">カードローン・リボ 残高<br><span class="attr-note">※1～2か月後の通常のカード決済は除く</span></span><div class="input-field-wrap"><input type="number" id="debt_card" placeholder="0" step="0.1"> 万円</div></div>
+                            <div class="input-group"><span class="input-label">その他ローン 残高</span><div class="input-field-wrap"><input type="number" id="debt_other" placeholder="0" step="0.1"> 万円</div></div>
+                            <div class="input-group"><span class="input-label">住宅ローン 残高<br><span class="attr-note">※参考情報。純金融資産からは差し引きません</span></span><div class="input-field-wrap"><input type="number" id="debt_mortgage" placeholder="0" step="0.1"> 万円</div></div>
+                        </div>
 
                         <button type="button" class="submit-btn" id="btn-step1" onclick="submitStep1()">次へ（固定費の入力へ）</button>
                     </div>
@@ -609,6 +618,19 @@
             const v = getStr('children');
             const show = (v && v !== '0人');
             document.getElementById('youngest-row').style.display = show ? 'flex' : 'none';
+        }
+
+        function onDebtChange() {
+            const hasDebt = getStr('has_debt') === 'あり';
+            const details = document.getElementById('debt-details');
+            if (!details) return;
+            details.style.display = hasDebt ? 'block' : 'none';
+            if (!hasDebt) {
+                ['debt_student', 'debt_car', 'debt_card', 'debt_other', 'debt_mortgage'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.value = '';
+                });
+            }
         }
 
 
@@ -714,6 +736,11 @@
         // Step 1: 収入・資産
         // ==========================
         function submitStep1() {
+            if (!getStr('has_debt')) {
+                alert('借入状況を選択してください。');
+                document.getElementById('has_debt').focus();
+                return;
+            }
             userData.user_age = getVal('user_age');
             userData.working_years = getVal('working_years');
 
@@ -743,7 +770,16 @@
             userData.ast_dc        = getMoneyVal('ast_dc');
             userData.ast_insurance = getMoneyVal('ast_insurance');
             userData.ast_other     = getMoneyVal('ast_other');
-            userData.debt_total = getMoneyVal('debt_total');
+
+            userData.has_debt     = getStr('has_debt');
+            userData.debt_student = getMoneyVal('debt_student');
+            userData.debt_car     = getMoneyVal('debt_car');
+            userData.debt_card    = getMoneyVal('debt_card');
+            userData.debt_other   = getMoneyVal('debt_other');
+            userData.debt_mortgage = getMoneyVal('debt_mortgage');
+            // 住宅ローンは対応する住宅資産があるため、純金融資産からは差し引かない
+            userData.debt_total = userData.debt_student + userData.debt_car
+                                + userData.debt_card + userData.debt_other;
             
             // 金融資産の合計。不動産等の実物資産は含めない
             // （②の比較に使う公的調査の「金融資産保有額」の定義に合わせるため）
@@ -800,8 +836,13 @@
                         <div class="input-group"><span class="input-label">医療保険</span><div class="input-field-wrap"><input type="number" id="fx_ins_med" placeholder="0" step="0.1"> 万円</div></div>
                         <div class="input-group"><span class="input-label">生命保険</span><div class="input-field-wrap"><input type="number" id="fx_ins_life" placeholder="0" step="0.1"> 万円</div></div>
                         <div class="input-group"><span class="input-label">その他保険</span><div class="input-field-wrap"><input type="number" id="fx_ins_other" placeholder="0" step="0.1"> 万円</div></div>
-                        <div class="input-group"><span class="input-label">その他ローン<br><span style="font-size:0.7rem;font-weight:normal;">(車・カード等 月額)</span></span><div class="input-field-wrap"><input type="number" id="fx_loan" placeholder="0" step="0.1"> 万円</div></div>
-                        <div class="input-group"><span class="input-label">奨学金(月額返済)</span><div class="input-field-wrap"><input type="number" id="fx_scholarship" placeholder="0" step="0.1"> 万円</div></div>
+                        ${userData.has_debt === 'あり' ? `
+                        <div class="form-section-title">借入の月額返済</div>
+                        <div class="input-group"><span class="input-label">奨学金</span><div class="input-field-wrap"><input type="number" id="fx_student" placeholder="0" step="0.1"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">自動車ローン</span><div class="input-field-wrap"><input type="number" id="fx_car_loan" placeholder="0" step="0.1"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">カードローン・リボ</span><div class="input-field-wrap"><input type="number" id="fx_card_loan" placeholder="0" step="0.1"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">その他ローン</span><div class="input-field-wrap"><input type="number" id="fx_other_loan" placeholder="0" step="0.1"> 万円</div></div>
+                        ` : ''}
 
                         <button type="button" class="submit-btn" id="btn-step2" onclick="submitStep2()">次へ（変動費の入力へ）</button>
                     </div>
@@ -822,11 +863,18 @@
             userData.fx_mobile = getMoneyVal('fx_mobile'); userData.fx_net = getMoneyVal('fx_net');
             userData.fx_ins_car = getMoneyVal('fx_ins_car'); userData.fx_ins_med = getMoneyVal('fx_ins_med'); 
             userData.fx_ins_life = getMoneyVal('fx_ins_life'); userData.fx_ins_other = getMoneyVal('fx_ins_other');
-            userData.fx_loan = getMoneyVal('fx_loan'); userData.fx_scholarship = getMoneyVal('fx_scholarship');
+            userData.fx_student   = getMoneyVal('fx_student');
+            userData.fx_car_loan  = getMoneyVal('fx_car_loan');
+            userData.fx_card_loan = getMoneyVal('fx_card_loan');
+            userData.fx_other_loan = getMoneyVal('fx_other_loan');
+            // 旧列との互換性を維持
+            userData.fx_scholarship = userData.fx_student;
+            userData.fx_loan = userData.fx_car_loan + userData.fx_card_loan + userData.fx_other_loan;
             
             userData.monthlyFixed = userData.fx_rent + userData.fx_elec + userData.fx_gas + userData.fx_water + 
                                     userData.fx_mobile + userData.fx_net + userData.fx_ins_car + userData.fx_ins_med + 
-                                    userData.fx_ins_life + userData.fx_ins_other + userData.fx_loan + userData.fx_scholarship;
+                                    userData.fx_ins_life + userData.fx_ins_other + userData.fx_student
+                                    + userData.fx_car_loan + userData.fx_card_loan + userData.fx_other_loan;
 
             document.getElementById('step2-form').style.display = 'none';
             document.getElementById('step2-summary').style.display = 'block';
@@ -1062,8 +1110,10 @@
                     <div class="cf-row"><span class="indent">美容室</span><span>${yen(userData.vr_hair)} 円</span></div>
                     <div class="cf-row"><span class="indent">化粧品</span><span>${yen(userData.vr_cosme)} 円</span></div>
                     <div class="cf-row"><span class="indent">その他娯楽・趣味</span><span>${yen(userData.vr_hobby)} 円</span></div>
-                    <div class="cf-row"><span class="indent">その他ローン(返済)</span><span>${yen(userData.fx_loan)} 円</span></div>
-                    <div class="cf-row"><span class="indent">奨学金(返済)</span><span>${yen(userData.fx_scholarship)} 円</span></div>
+                    <div class="cf-row"><span class="indent">奨学金（返済）</span><span>${yen(userData.fx_student)} 円</span></div>
+                    <div class="cf-row"><span class="indent">自動車ローン（返済）</span><span>${yen(userData.fx_car_loan)} 円</span></div>
+                    <div class="cf-row"><span class="indent">カードローン・リボ（返済）</span><span>${yen(userData.fx_card_loan)} 円</span></div>
+                    <div class="cf-row"><span class="indent">その他ローン（返済）</span><span>${yen(userData.fx_other_loan)} 円</span></div>
                     ${otherItemsHtml}
                     <div class="cf-row total"><span>合計 ③</span><span>${yen(r.monthlyTotalExp)} 円</span></div>
                     <div class="cf-row total"><span>【年間支出】⑤ <br><span style="font-size:0.7rem; font-weight:normal;">③×12ヵ月</span></span><span>${yen(r.annualTotalExp)} 円</span></div>
@@ -1076,8 +1126,13 @@
                     <div class="cf-row"><span class="indent">貯蓄型保険（解約返戻金）</span><span>${yen(userData.ast_insurance)} 円</span></div>
                     <div class="cf-row"><span class="indent">その他の金融資産</span><span>${yen(userData.ast_other)} 円</span></div>
                     <div class="cf-row total"><span>金融資産 合計</span><span>${yen(userData.totalAssets)} 円</span></div>
-                    <div class="cf-row" style="color:#b91c1c;"><span class="indent">負債総額</span><span>▲ ${yen(userData.debt_total)} 円</span></div>
-                    <div class="cf-row total" style="color:#0f172a;"><span>【純金融資産額】</span><span>${yen(userData.netWorth)} 円</span></div>
+                    <div class="cf-row"><span class="indent">奨学金残高</span><span>${yen(userData.debt_student)} 円</span></div>
+                    <div class="cf-row"><span class="indent">自動車ローン残高</span><span>${yen(userData.debt_car)} 円</span></div>
+                    <div class="cf-row"><span class="indent">カードローン・リボ残高</span><span>${yen(userData.debt_card)} 円</span></div>
+                    <div class="cf-row"><span class="indent">その他ローン残高</span><span>${yen(userData.debt_other)} 円</span></div>
+                    <div class="cf-row" style="color:#b91c1c;"><span class="indent">住宅以外の借入合計</span><span>▲ ${yen(userData.debt_total)} 円</span></div>
+                    <div class="cf-row total" style="color:#0f172a;"><span>【返済考慮後の現在地】<br><span style="font-size:0.7rem;font-weight:normal;">※評価点には使用しません</span></span><span>${yen(userData.netWorth)} 円</span></div>
+                    <div class="cf-row"><span class="indent">住宅ローン残高（参考）</span><span>${yen(userData.debt_mortgage)} 円</span></div>
                 </div>
             `;
 
@@ -1117,12 +1172,22 @@
                             <div class="assumption-title">①「残す力」の算定根拠</div>
                             <div class="assumption-row"><span>就業期間</span><span><strong>${r.careerStartAge}歳 〜 ${userData.user_age}歳（${r.careerYears}年）</strong></span></div>
                             <div class="assumption-row"><span>推計した累計手取り収入</span><span><strong>${man(r.lifetimeIncome)}</strong></span></div>
-                            <div class="assumption-row"><span>現在の純金融資産</span><span><strong>${man(userData.netWorth)}</strong></span></div>
+                            <div class="assumption-row"><span>これまで形成した金融資産</span><span><strong>${man(userData.totalAssets)}</strong></span></div>
                             <div class="assumption-src">
                                 出典：厚生労働省「令和7年賃金構造基本統計調査」第2表（性、年齢階級別賃金）<br>
                                 ※現在の収入を起点に、性別・年齢別の賃金カーブで過去の各年の収入水準を割り戻して累計しています。「現在の年収 × 勤続年数」で代用すると過去の収入を多く見積もってしまうためです。<br>
-                                ※転職・休職・独立などの個別のご事情は反映されません。
+                                ※転職・休職・独立などの個別のご事情は反映されません。借入はこの評価から差し引かず、下の「借入・返済コンディション」で別に確認します。
                             </div>
+                        </div>
+
+                        <div class="assumption-box">
+                            <div class="assumption-title">借入・返済コンディション</div>
+                            <div style="margin:4px 0 9px;"><span class="ind-eval ${r.debtClass}">${r.debtCondition}</span></div>
+                            <div class="assumption-row"><span>住宅以外の借入残高</span><span><strong>${man(r.nonHousingDebt)}</strong></span></div>
+                            <div class="assumption-row"><span>毎月の返済額</span><span><strong>${man(r.monthlyDebtPayment)}</strong></span></div>
+                            <div class="assumption-row"><span>手取り年収に対する返済割合</span><span><strong>${r.debtPaymentRate.toFixed(1)}%</strong></span></div>
+                            <div class="assumption-row"><span>住宅ローン残高</span><span><strong>${man(r.mortgageBalance)}（参考）</strong></span></div>
+                            <div class="assumption-src">${r.debtMessage}<br>※借入残高だけで家計を悪く判定せず、借入の種類と毎月の返済負担を分けて確認しています。住宅ローンは対応する住宅資産があるため、純金融資産から差し引いていません。</div>
                         </div>
 
                         <div class="assumption-box">
