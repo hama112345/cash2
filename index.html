@@ -466,7 +466,7 @@
         const CONFIG = {
             endpoint:       'https://script.google.com/macros/s/AKfycbwgldxZN5HQGHp9OvU6UhV6LGcqPKeolzozX7hDAQBay35HA3PMcJQOOgMji5bupyaK/exec',
             token:          'test',
-            appVersion:     'v1.6.0',
+            appVersion:     'v1.6.1',
             consentVersion: '2026-09-21'
         };
 
@@ -1242,7 +1242,7 @@
             </div>`;
 
             chatMessages.insertAdjacentHTML('beforeend', resultHtml);
-            scrollToBottom();
+            scrollToFormTop('result-row');
             setTimeout(animateNumbers, 100);
         }
     </script>
