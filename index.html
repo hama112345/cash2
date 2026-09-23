@@ -595,7 +595,7 @@
                 </div>
             </div>`;
             chatMessages.insertAdjacentHTML('beforeend', html);
-            scrollToBottom();
+            scrollToFormTop('step1-form');
         }
 
         function onDualIncomeChange() {
@@ -614,6 +614,20 @@
 
         function scrollToBottom() {
             setTimeout(() => { chatMessages.scrollTop = chatMessages.scrollHeight; }, 100);
+        }
+        // 新しく表示した入力フォームの「先頭」を会話欄の上端へ合わせる。
+        // scrollIntoView はページ全体まで動かす場合があるため、会話欄だけをスクロールする。
+        function scrollToFormTop(formId) {
+            setTimeout(() => {
+                const form = document.getElementById(formId);
+                if (!form) return;
+                const formRect = form.getBoundingClientRect();
+                const containerRect = chatMessages.getBoundingClientRect();
+                chatMessages.scrollTo({
+                    top: chatMessages.scrollTop + formRect.top - containerRect.top - 12,
+                    behavior: 'smooth'
+                });
+            }, 100);
         }
 
         function getVal(id) { 
@@ -799,7 +813,7 @@
                 </div>
             </div>`;
             chatMessages.insertAdjacentHTML('beforeend', html);
-            scrollToBottom();
+            scrollToFormTop('step2-form');
         }
 
         function submitStep2() {
@@ -897,7 +911,7 @@
                 </div>
             </div>`;
             chatMessages.insertAdjacentHTML('beforeend', html);
-            scrollToBottom();
+            scrollToFormTop('step3-form');
         }
 
         function submitStep3() {
