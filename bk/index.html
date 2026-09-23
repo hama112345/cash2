@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>金融コンサルティング専用 キャッシュフロー診断</title>
+    <style>
+        :root {
+            --primary: #0f172a;
+            --accent: #2563eb;
+            --accent-hover: #1d4ed8;
+            --bg-color: #f1f5f9;       
+            --chat-messages-bg: #ffffff; 
+            --text-main: #334155;
+            --text-muted: #64748b;
+            --ai-bubble: #f8fafc;
+            --user-bubble: #2563eb;
+            --border-light: #e2e8f0;
+            --font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body { 
+            font-family: var(--font-family); 
+            background-color: var(--bg-color); 
+            color: var(--text-main); 
+            line-height: 1.6; 
+            height: 100vh;
+            height: 100dvh;
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden; 
+        }
+        
+        header { 
+            background-color: var(--primary); 
+            color: #ffffff; 
+            padding: 16px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 12px; 
+            z-index: 30; 
+            flex-shrink: 0; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+        }
+        
+        .header-text h1 { font-size: 1.1rem; font-weight: 700; margin: 0; }
+
+        main { 
+            flex: 1; 
+            display: flex; 
+            justify-content: center; 
+            width: 100%; 
+            overflow: hidden;
+        }
+        
+        .chat-container { 
+            width: 100%; 
+            max-width: 600px; 
+            display: flex; 
+            flex-direction: column; 
+            background-color: var(--chat-messages-bg); 
+            height: 100%; 
+            box-shadow: 0 0 15px rgba(0,0,0,0.05);
+        }
+        
+        .chat-messages { 
+            flex: 1; 
+            padding: 20px 16px; 
+            overflow-y: auto; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 20px; 
+            scroll-behavior: smooth;
+        }
+
+        .message-row { display: flex; width: 100%; }
+        .animate-fade { animation: fadeIn 0.4s ease forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .ai-row { justify-content: flex-start; }
+        .user-row { justify-content: flex-end; }
+        
+        .ai-bubble { 
+            background-color: var(--ai-bubble); 
+            color: var(--text-main); 
+            padding: 14px 18px; 
+            border-radius: 4px 18px 18px 18px; 
+            max-width: 90%; 
+            font-size: 0.95rem; 
+            border: 1px solid var(--border-light); 
+        }
+        
+        .user-bubble { 
+            background-color: var(--user-bubble); 
+            color: #ffffff; 
+            padding: 12px 18px; 
+            border-radius: 18px 4px 18px 18px; 
+            max-width: 85%; 
+            font-size: 0.95rem; 
+        }
+
+        .form-card {
+            background: #ffffff;
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            width: 100%;
+        }
+
+        .form-section-title {
+            background-color: #f1f5f9;
+            padding: 4px 8px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            border-left: 3px solid var(--accent);
+            margin: 12px 0 8px 0;
+            border-radius: 2px;
+        }
+        .form-section-title:first-child { margin-top: 0; }
+
+        .input-group {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px dashed var(--border-light);
+        }
+        .input-group:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        
+        .input-label { font-size: 0.85rem; font-weight: 600; color: var(--text-main); flex: 1; }
+        
+        .custom-label-input {
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 6px;
+            font-size: 0.85rem;
+            flex: 1;
+            margin-right: 8px;
+            width: 100%;
+            max-width: 130px;
+        }
+
+        .input-field-wrap { display: flex; align-items: center; gap: 6px; }
+        .input-field-wrap input[type="number"] {
+            width: 80px;
+            padding: 6px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            text-align: right;
+            font-size: 0.95rem;
+        }
+
+        .submit-btn {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            margin-top: 16px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .submit-btn:hover { background-color: var(--accent-hover); }
+
+        .edit-btn {
+            background: transparent;
+            color: var(--accent);
+            border: 1px solid var(--accent);
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 12px;
+            transition: 0.2s;
+            width: 100%;
+        }
+        .edit-btn:hover { background: var(--accent); color: white; }
+
+        .add-btn {
+            background: transparent;
+            color: var(--accent);
+            border: 1px dashed var(--accent);
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 8px;
+            width: 100%;
+            transition: 0.2s;
+        }
+        .add-btn:hover { background: #eff6ff; }
+        
+        .remove-btn {
+            background: none;
+            border: none;
+            color: #ef4444;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0 4px;
+            line-height: 1;
+        }
+
+        .result-card { text-align: center; margin-top: 10px; width: 100%; }
+        .result-badge { display: inline-block; background-color: var(--primary); color: #ffffff; font-size: 0.9rem; font-weight: 700; padding: 6px 16px; border-radius: 20px; margin-bottom: 12px; }
+        .result-message { font-size: 0.95rem; color: var(--text-main); text-align: left; background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid var(--border-light); margin-bottom: 16px; line-height: 1.7; }
+        
+        .cf-sheet {
+            display: none;
+            background: white;
+            border: 2px solid var(--primary);
+            padding: 16px;
+            border-radius: 8px;
+            text-align: left;
+            font-size: 0.85rem;
+            margin-top: 20px;
+        }
+        .cf-sheet h3 { border-bottom: 2px solid var(--primary); padding-bottom: 4px; margin-bottom: 12px; }
+        .cf-row { display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 4px 0; }
+        .cf-row.total { font-weight: bold; background: #f1f5f9; padding: 8px 4px; border-bottom: none; }
+        .cf-row.sub-title { font-weight: bold; margin-top: 8px; border-bottom: 1px solid #ccc; color: var(--accent); }
+        .cf-row .indent { padding-left: 12px; color: #64748b; }
+        
+        @media print {
+            body { background: white; overflow: visible; height: auto; }
+            header, .chat-messages .message-row:not(:last-child), .submit-btn, .edit-btn, .add-btn, .remove-btn { display: none; }
+            .cf-sheet { display: block !important; border: none; margin-top: 0; }
+            .chat-container { box-shadow: none; max-width: 100%; border: none; overflow: visible;}
+            .chat-messages { overflow: visible; }
+            #result-row .result-card { display: none; } 
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-text">
+            <h1>ライフプラン＆キャッシュフロー診断</h1>
+        </div>
+    </header>
+
+    <main>
+        <div class="chat-container">
+            <div class="chat-messages" id="chatMessages">
+                <!-- Step 1 -->
+                <div class="message-row ai-row animate-fade">
+                    <div class="ai-bubble">
+                        こんにちは！詳細な項目から、現在の「家計の健康状態」を正確に診断します。<br><br>
+                        まずは、<strong>「収入」と「現在の金融資産」</strong>について教えてください。<br>
+                        <span style="font-size: 0.8rem; color:#64748b;">※単位はすべて「万円」でご入力ください。</span>
+                        
+                        <div class="form-card" id="step1-form">
+                            <div class="form-section-title">収入</div>
+                            <div class="input-group"><span class="input-label">月収（額面）</span><div class="input-field-wrap"><input type="number" id="inc_gross" placeholder="0"> 万円</div></div>
+                            <div class="input-group"><span class="input-label">月収（手取り）</span><div class="input-field-wrap"><input type="number" id="inc_net" placeholder="0"> 万円</div></div>
+                            <div class="input-group">
+                                <span class="input-label">ボーナス（手取り）</span>
+                                <div class="input-field-wrap" style="gap:4px;">
+                                    年 <input type="number" id="bonus_count" placeholder="0" style="width:40px;"> 回
+                                    計 <input type="number" id="bonus_total" placeholder="0" style="width:60px;"> 万円
+                                </div>
+                            </div>
+                            
+                            <div class="form-section-title">金融資産</div>
+                            <div class="input-group"><span class="input-label">普通預金</span><div class="input-field-wrap"><input type="number" id="ast_ordinary" placeholder="0"> 万円</div></div>
+                            <div class="input-group"><span class="input-label">定期預金</span><div class="input-field-wrap"><input type="number" id="ast_time" placeholder="0"> 万円</div></div>
+                            <div class="input-group"><span class="input-label">その他（投資信託等）</span><div class="input-field-wrap"><input type="number" id="ast_other" placeholder="0"> 万円</div></div>
+                            
+                            <button type="button" class="submit-btn" id="btn-step1" onclick="submitStep1()">次へ（固定費の入力へ）</button>
+                        </div>
+
+                        <!-- 完了後のサマリー表示 -->
+                        <div class="form-card" id="step1-summary" style="display: none; text-align: center; background: #f8fafc;">
+                            <span style="font-size:0.95rem; font-weight:bold; color:var(--text-main);">✅ 収入・金融資産の入力完了</span><br>
+                            <button type="button" class="edit-btn" onclick="toggleEdit('step1')">✏️ 内容を確認・修正する</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const chatMessages = document.getElementById('chatMessages');
+        let userData = {};
+        let highestStep = 1;
+
+        function scrollToBottom() {
+            setTimeout(() => { chatMessages.scrollTop = chatMessages.scrollHeight; }, 100);
+        }
+
+        function getVal(id) { 
+            const el = document.getElementById(id);
+            return el ? (Number(el.value) || 0) : 0; 
+        }
+
+        function toggleEdit(step) {
+            document.getElementById(step + '-form').style.display = 'block';
+            document.getElementById(step + '-summary').style.display = 'none';
+        }
+
+        // ==========================
+        // Step 1: 収入・資産
+        // ==========================
+        function submitStep1() {
+            userData.inc_gross = getVal('inc_gross');
+            userData.inc_net = getVal('inc_net');
+            userData.bonus_count = getVal('bonus_count');
+            userData.bonus_total = getVal('bonus_total');
+            userData.annualIncome = (userData.inc_net * 12) + userData.bonus_total;
+            
+            userData.ast_ordinary = getVal('ast_ordinary');
+            userData.ast_time = getVal('ast_time');
+            userData.ast_other = getVal('ast_other');
+            userData.totalAssets = userData.ast_ordinary + userData.ast_time + userData.ast_other;
+
+            document.getElementById('step1-form').style.display = 'none';
+            document.getElementById('step1-summary').style.display = 'block';
+            document.getElementById('btn-step1').innerText = "修正を反映する"; 
+
+            if (highestStep < 2) {
+                highestStep = 2;
+                setTimeout(generateStep2, 400);
+            } else if (highestStep === 4) {
+                calculateResult();
+            }
+        }
+
+        // ==========================
+        // Step 2: 固定費
+        // ==========================
+        function generateStep2() {
+            const html = `
+            <div class="message-row ai-row animate-fade">
+                <div class="ai-bubble">
+                    ありがとうございます！<br>次に、毎月必ずかかっている<strong>「固定費」</strong>を教えてください。
+                    
+                    <div class="form-card" id="step2-form">
+                        <div class="input-group"><span class="input-label">家賃</span><div class="input-field-wrap"><input type="number" id="fx_rent" placeholder="0"> 万円</div></div>
+                        
+                        <div class="form-section-title">水道光熱・通信費</div>
+                        <div class="input-group"><span class="input-label">電気</span><div class="input-field-wrap"><input type="number" id="fx_elec" placeholder="0"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">ガス</span><div class="input-field-wrap"><input type="number" id="fx_gas" placeholder="0"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">水道</span><div class="input-field-wrap"><input type="number" id="fx_water" placeholder="0"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">携帯電話</span><div class="input-field-wrap"><input type="number" id="fx_mobile" placeholder="0"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">通信（ネット等）</span><div class="input-field-wrap"><input type="number" id="fx_net" placeholder="0"> 万円</div></div>
+
+                        <div class="form-section-title">保険・ローン関連</div>
+                        <div class="input-group"><span class="input-label">自動車保険</span><div class="input-field-wrap"><input type="number" id="fx_ins_car" placeholder="0"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">医療保険</span><div class="input-field-wrap"><input type="number" id="fx_ins_med" placeholder="0"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">生命保険</span><div class="input-field-wrap"><input type="number" id="fx_ins_life" placeholder="0"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">その他保険</span><div class="input-field-wrap"><input type="number" id="fx_ins_other" placeholder="0"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">ローン</span><div class="input-field-wrap"><input type="number" id="fx_loan" placeholder="0"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">奨学金</span><div class="input-field-wrap"><input type="number" id="fx_scholarship" placeholder="0"> 万円</div></div>
+
+                        <button type="button" class="submit-btn" id="btn-step2" onclick="submitStep2()">次へ（変動費の入力へ）</button>
+                    </div>
+
+                    <div class="form-card" id="step2-summary" style="display: none; text-align: center; background: #f8fafc;">
+                        <span style="font-size:0.95rem; font-weight:bold; color:var(--text-main);">✅ 固定費の入力完了</span><br>
+                        <button type="button" class="edit-btn" onclick="toggleEdit('step2')">✏️ 内容を確認・修正する</button>
+                    </div>
+                </div>
+            </div>`;
+            chatMessages.insertAdjacentHTML('beforeend', html);
+            scrollToBottom();
+        }
+
+        function submitStep2() {
+            userData.fx_rent = getVal('fx_rent');
+            userData.fx_elec = getVal('fx_elec'); userData.fx_gas = getVal('fx_gas'); userData.fx_water = getVal('fx_water');
+            userData.fx_mobile = getVal('fx_mobile'); userData.fx_net = getVal('fx_net');
+            userData.fx_ins_car = getVal('fx_ins_car'); userData.fx_ins_med = getVal('fx_ins_med'); 
+            userData.fx_ins_life = getVal('fx_ins_life'); userData.fx_ins_other = getVal('fx_ins_other');
+            userData.fx_loan = getVal('fx_loan'); userData.fx_scholarship = getVal('fx_scholarship');
+            
+            userData.monthlyFixed = userData.fx_rent + userData.fx_elec + userData.fx_gas + userData.fx_water + 
+                                    userData.fx_mobile + userData.fx_net + userData.fx_ins_car + userData.fx_ins_med + 
+                                    userData.fx_ins_life + userData.fx_ins_other + userData.fx_loan + userData.fx_scholarship;
+
+            document.getElementById('step2-form').style.display = 'none';
+            document.getElementById('step2-summary').style.display = 'block';
+            document.getElementById('btn-step2').innerText = "修正を反映する";
+
+            if (highestStep < 3) {
+                highestStep = 3;
+                setTimeout(generateStep3, 400);
+            } else if (highestStep === 4) {
+                calculateResult();
+            }
+        }
+
+        // ==========================
+        // Step 3: 変動費とダイナミック追加
+        // ==========================
+        function addOtherItem() {
+            const container = document.getElementById('dynamic-other-container');
+            const html = `
+            <div class="input-group other-item">
+                <input type="text" class="custom-label-input other-label" placeholder="例: サブスク代">
+                <div class="input-field-wrap">
+                    <input type="number" class="other-value" placeholder="0"> 万円
+                    <button type="button" class="remove-btn" onclick="this.parentElement.parentElement.remove()">×</button>
+                </div>
+            </div>`;
+            container.insertAdjacentHTML('beforeend', html);
+        }
+
+        function generateStep3() {
+            const html = `
+            <div class="message-row ai-row animate-fade">
+                <div class="ai-bubble">
+                    あと少しです！最後に、食費や日用品などの<strong>「変動費（月額平均）」</strong>を教えてください。
+                    
+                    <div class="form-card" id="step3-form">
+                        <div class="form-section-title">食費・交通費</div>
+                        <div class="input-group"><span class="input-label">食費（自宅）</span><div class="input-field-wrap"><input type="number" id="vr_food_home" placeholder="0"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">食費（外食）</span><div class="input-field-wrap"><input type="number" id="vr_food_out" placeholder="0"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">ガソリン</span><div class="input-field-wrap"><input type="number" id="vr_gasoline" placeholder="0"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">その他交通</span><div class="input-field-wrap"><input type="number" id="vr_transport" placeholder="0"> 万円</div></div>
+                        
+                        <div class="form-section-title">生活・教育・娯楽</div>
+                        <div class="input-group"><span class="input-label">医療費</span><div class="input-field-wrap"><input type="number" id="vr_medical" placeholder="0"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">学費・習い事</span><div class="input-field-wrap"><input type="number" id="vr_edu" placeholder="0"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">被服</span><div class="input-field-wrap"><input type="number" id="vr_clothes" placeholder="0"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">美容室</span><div class="input-field-wrap"><input type="number" id="vr_hair" placeholder="0"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">化粧品</span><div class="input-field-wrap"><input type="number" id="vr_cosme" placeholder="0"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">その他娯楽・趣味</span><div class="input-field-wrap"><input type="number" id="vr_hobby" placeholder="0"> 万円</div></div>
+                        
+                        <div class="form-section-title">その他（項目名を自由に追加できます）</div>
+                        <div id="dynamic-other-container">
+                            <div class="input-group other-item">
+                                <input type="text" class="custom-label-input other-label" placeholder="例: ペット関連費">
+                                <div class="input-field-wrap">
+                                    <input type="number" class="other-value" placeholder="0"> 万円
+                                    <button type="button" class="remove-btn" onclick="this.parentElement.parentElement.remove()">×</button>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="add-btn" onclick="addOtherItem()">＋ 項目を追加する</button>
+
+                        <button type="button" class="submit-btn" id="btn-step3" onclick="submitStep3()">診断結果を見る</button>
+                    </div>
+
+                    <div class="form-card" id="step3-summary" style="display: none; text-align: center; background: #f8fafc;">
+                        <span style="font-size:0.95rem; font-weight:bold; color:var(--text-main);">✅ 変動費の入力完了</span><br>
+                        <button type="button" class="edit-btn" onclick="toggleEdit('step3')">✏️ 内容を確認・修正する</button>
+                    </div>
+                </div>
+            </div>`;
+            chatMessages.insertAdjacentHTML('beforeend', html);
+            scrollToBottom();
+        }
+
+        function submitStep3() {
+            userData.vr_food_home = getVal('vr_food_home'); userData.vr_food_out = getVal('vr_food_out');
+            userData.vr_gasoline = getVal('vr_gasoline'); userData.vr_transport = getVal('vr_transport');
+            userData.vr_medical = getVal('vr_medical'); userData.vr_edu = getVal('vr_edu');
+            userData.vr_clothes = getVal('vr_clothes'); userData.vr_hair = getVal('vr_hair');
+            userData.vr_cosme = getVal('vr_cosme'); userData.vr_hobby = getVal('vr_hobby');
+            
+            // 動的に追加された「その他」項目を取得
+            userData.otherItems = [];
+            let otherTotal = 0;
+            document.querySelectorAll('.other-item').forEach(item => {
+                const label = item.querySelector('.other-label').value.trim() || "その他支出";
+                const val = Number(item.querySelector('.other-value').value) || 0;
+                if (val > 0 || label !== "その他支出") {
+                    userData.otherItems.push({ label, val });
+                    otherTotal += val;
+                }
+            });
+
+            userData.monthlyVar = userData.vr_food_home + userData.vr_food_out + userData.vr_gasoline + 
+                                  userData.vr_transport + userData.vr_medical + userData.vr_edu + 
+                                  userData.vr_clothes + userData.vr_hair + userData.vr_cosme + 
+                                  userData.vr_hobby + otherTotal;
+            
+            document.getElementById('step3-form').style.display = 'none';
+            document.getElementById('step3-summary').style.display = 'block';
+            document.getElementById('btn-step3').innerText = "修正を反映して再計算する";
+
+            highestStep = 4;
+            calculateResult();
+        }
+
+        // ==========================
+        // 結果計算と出力
+        // ==========================
+        function calculateResult() {
+            const monthlyTotalExp = userData.monthlyFixed + userData.monthlyVar; 
+            const annualTotalExp = monthlyTotalExp * 12; 
+            const monthlySavings = userData.inc_net - monthlyTotalExp; 
+            const annualSavings = userData.annualIncome - annualTotalExp; 
+            const fixedRatio = userData.inc_net > 0 ? (userData.monthlyFixed / userData.inc_net) * 100 : 0;
+            
+            const investAssets = userData.ast_other;
+
+            let typeName = "";
+            let msg = "";
+
+            if (annualSavings <= 0 || userData.totalAssets < userData.inc_net) {
+                typeName = "ギリギリやりくりタイプ";
+                msg = "毎月のやりくり、本当にお疲れ様です！今は収入と支出のバランスがギリギリで、急な出費があったときに少し不安な状態です。まずは万が一のための「現金のお守り（防衛資金）」を少しずつでも作っていくことから一緒に始めましょう。";
+            } else if (fixedRatio > 50) {
+                typeName = "固定費でパンパンタイプ";
+                msg = "毎月必ず出ていく家賃や保険、通信費などの「固定費」が少し多めで、貯金に回す余裕が作りにくい状態のようです。日々の節約を頑張るよりも、まずは見直し効果が大きい保険やローンの最適化から始めると、グッと楽になりますよ。";
+            } else if (userData.monthlyVar > (userData.inc_net * 0.4) && annualSavings < 50) {
+                typeName = "稼ぐ力はあるけど、ちょっぴり浪費タイプ";
+                msg = "お仕事での収入は十分にあるのですが、外食や趣味など日々のちょっとした出費が重なっているかもしれません。このままだと、将来のためのまとまったお金を作りにくくなってしまうので、少しだけメリハリをつけるのがおすすめです。";
+            } else if (annualSavings > 50 && userData.totalAssets > 100) {
+                if (investAssets >= (userData.totalAssets * 0.2) || investAssets >= 100) {
+                    typeName = "しっかり貯金・運用実践タイプ";
+                    msg = "素晴らしいです！やり繰り上手で貯金ができているだけでなく、投資信託などへ資産を振り分け、お金に働いてもらう仕組みも作れていますね。今のバランスを保ちつつ、今後はNISA枠の最大化やポートフォリオの最適化など、さらに効率的な資産形成を検討するフェーズです。";
+                } else {
+                    typeName = "しっかり貯金・現金偏重タイプ";
+                    msg = "やり繰り上手でしっかり貯金できていて素晴らしいです！ただ、せっかくのお金が現金（預金）だけだと、将来的に物価が上がったときに価値が下がってしまう（インフレ負けする）もったいない面もあります。リスクを抑えたNISAなどの活用を検討する良いタイミングです。";
+                }
+            } else {
+                typeName = "バランスばっちり優等生タイプ";
+                msg = "素晴らしいです！収入・支出・貯金のバランスがとても良く、お金の管理がしっかりできていますね。今のペースを保ちつつ、さらに効率よく資産を増やしていくためのステップアップを考えても良い状態です。";
+            }
+
+            // 動的に追加されたその他項目のHTML生成
+            let otherItemsHtml = "";
+            userData.otherItems.forEach(item => {
+                otherItemsHtml += `<div class="cf-row"><span class="indent">${item.label}</span><span>${item.val} 万円</span></div>`;
+            });
+
+            const sheetHtml = `
+                <div class="cf-sheet" id="cfSheet">
+                    <h3>キャッシュフローチェックシート</h3>
+                    
+                    <div class="cf-row sub-title"><span>【収入】</span></div>
+                    <div class="cf-row"><span>月収（額面）</span><span>${userData.inc_gross} 万円</span></div>
+                    <div class="cf-row"><span>月収（手取）①</span><span>${userData.inc_net} 万円</span></div>
+                    <div class="cf-row"><span>ボーナス（年 ${userData.bonus_count} 回）②</span><span>計 ${userData.bonus_total} 万円</span></div>
+                    <div class="cf-row total"><span>【年収】④ <br><span style="font-size:0.7rem; font-weight:normal;">(①×12ヵ月) + ②</span></span><span>${userData.annualIncome} 万円</span></div>
+                    
+                    <div class="cf-row sub-title"><span>【支出】</span></div>
+                    <div class="cf-row"><span class="indent">家賃</span><span>${userData.fx_rent} 万円</span></div>
+                    <div class="cf-row"><span class="indent">電気</span><span>${userData.fx_elec} 万円</span></div>
+                    <div class="cf-row"><span class="indent">ガス</span><span>${userData.fx_gas} 万円</span></div>
+                    <div class="cf-row"><span class="indent">水道</span><span>${userData.fx_water} 万円</span></div>
+                    <div class="cf-row"><span class="indent">携帯電話</span><span>${userData.fx_mobile} 万円</span></div>
+                    <div class="cf-row"><span class="indent">通信</span><span>${userData.fx_net} 万円</span></div>
+                    <div class="cf-row"><span class="indent">食費・自宅</span><span>${userData.vr_food_home} 万円</span></div>
+                    <div class="cf-row"><span class="indent">食費・外食</span><span>${userData.vr_food_out} 万円</span></div>
+                    <div class="cf-row"><span class="indent">ガソリン</span><span>${userData.vr_gasoline} 万円</span></div>
+                    <div class="cf-row"><span class="indent">その他交通</span><span>${userData.vr_transport} 万円</span></div>
+                    <div class="cf-row"><span class="indent">保険・自動車保険</span><span>${userData.fx_ins_car} 万円</span></div>
+                    <div class="cf-row"><span class="indent">保険・医療保険</span><span>${userData.fx_ins_med} 万円</span></div>
+                    <div class="cf-row"><span class="indent">保険・生命保険</span><span>${userData.fx_ins_life} 万円</span></div>
+                    <div class="cf-row"><span class="indent">保険・その他保険</span><span>${userData.fx_ins_other} 万円</span></div>
+                    <div class="cf-row"><span class="indent">医療</span><span>${userData.vr_medical} 万円</span></div>
+                    <div class="cf-row"><span class="indent">学費・習い事</span><span>${userData.vr_edu} 万円</span></div>
+                    <div class="cf-row"><span class="indent">被服</span><span>${userData.vr_clothes} 万円</span></div>
+                    <div class="cf-row"><span class="indent">美容室</span><span>${userData.vr_hair} 万円</span></div>
+                    <div class="cf-row"><span class="indent">化粧品</span><span>${userData.vr_cosme} 万円</span></div>
+                    <div class="cf-row"><span class="indent">その他娯楽・趣味</span><span>${userData.vr_hobby} 万円</span></div>
+                    <div class="cf-row"><span class="indent">ローン</span><span>${userData.fx_loan} 万円</span></div>
+                    <div class="cf-row"><span class="indent">奨学金</span><span>${userData.fx_scholarship} 万円</span></div>
+                    ${otherItemsHtml}
+                    <div class="cf-row total"><span>合計 ③</span><span>${monthlyTotalExp} 万円</span></div>
+                    <div class="cf-row total"><span>【年間支出】⑤ <br><span style="font-size:0.7rem; font-weight:normal;">③×12ヵ月</span></span><span>${annualTotalExp} 万円</span></div>
+
+                    <div class="cf-row sub-title"><span>【分析結果】</span></div>
+                    <div class="cf-row total" style="color:#2563eb;"><span>【月間資産形成可能額】<br><span style="font-size:0.7rem; font-weight:normal;">① - ③</span></span><span>${monthlySavings} 万円</span></div>
+                    <div class="cf-row total" style="color:#2563eb;"><span>【年間資産形成可能額】<br><span style="font-size:0.7rem; font-weight:normal;">④ - ⑤</span></span><span>${annualSavings} 万円</span></div>
+
+                    <div class="cf-row sub-title"><span>【金融資産】</span></div>
+                    <div class="cf-row"><span class="indent">普通預金</span><span>${userData.ast_ordinary} 万円</span></div>
+                    <div class="cf-row"><span class="indent">定期預金</span><span>${userData.ast_time} 万円</span></div>
+                    <div class="cf-row"><span class="indent">その他（投資信託等）</span><span>${userData.ast_other} 万円</span></div>
+                </div>
+            `;
+
+            const existingResult = document.getElementById('result-row');
+            if (existingResult) {
+                existingResult.remove();
+            }
+
+            const resultHtml = `
+            <div class="message-row ai-row animate-fade" id="result-row">
+                <div class="ai-bubble" style="width: 100%; max-width: 100%;">
+                    分析が完了しました！あなたの診断結果はこちらです。<br><br>
+                    <div class="result-card">
+                        <div class="result-badge">${typeName}</div>
+                        <div class="result-message">${msg}</div>
+                        <button type="button" class="submit-btn" style="background:#e2e8f0; color:#334155;" onclick="document.getElementById('cfSheet').style.display='block';">📊 詳細シートを表示する</button>
+                        <button type="button" class="submit-btn" onclick="window.print()">🖨️ シートをPDF印刷</button>
+                    </div>
+                    ${sheetHtml}
+                </div>
+            </div>`;
+            
+            chatMessages.insertAdjacentHTML('beforeend', resultHtml);
+            scrollToBottom();
+        }
+    </script>
+</body>
+</html>

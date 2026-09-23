@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>金融コンサルティング専用 キャッシュフロー診断</title>
+    <style>
+        :root {
+            --primary: #1e293b;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --text-main: #1e293b;
+            --text-muted: #475569;
+            --font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+            
+            /* グラスモーフィズム用変数 */
+            --glass-bg: rgba(255, 255, 255, 0.4);
+            --glass-border: rgba(255, 255, 255, 0.5);
+            --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        /* 背景グラデーション（メッシュグラデーション風） */
+        body { 
+            font-family: var(--font-family); 
+            background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+            background-image: 
+                radial-gradient(at 40% 20%, rgba(167, 139, 250, 0.4) 0px, transparent 50%),
+                radial-gradient(at 80% 0%, rgba(56, 189, 248, 0.4) 0px, transparent 50%),
+                radial-gradient(at 0% 50%, rgba(251, 146, 60, 0.3) 0px, transparent 50%);
+            background-attachment: fixed;
+            color: var(--text-main); 
+            line-height: 1.6; 
+            height: 100vh;
+            height: 100dvh;
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden; 
+        }
+        
+        /* ヘッダーのグラスモーフィズム */
+        header { 
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--glass-border);
+            color: var(--primary); 
+            padding: 16px; 
+            display: flex; 
+            flex-direction: column;
+            align-items: center; 
+            justify-content: center; 
+            z-index: 30; 
+            flex-shrink: 0; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03); 
+            position: relative;
+        }
+        
+        .header-text h1 { font-size: 1.1rem; font-weight: 800; margin: 0; letter-spacing: 0.5px;}
+
+        /* プログレスバー */
+        .progress-container { width: 100%; height: 4px; background: #e2e8f0; position: absolute; bottom: 0; left: 0; }
+        .progress-bar { height: 100%; width: 33%; background: var(--accent); transition: width 0.6s ease; }
+
+        main { 
+            flex: 1; 
+            display: flex; 
+            justify-content: center; 
+            width: 100%; 
+            overflow: hidden;
+            padding: 16px; /* 余白を追加して浮かせる */
+        }
+        
+        /* チャットエリア全体のグラスモーフィズム */
+        .chat-container { 
+            width: 100%; 
+            max-width: 600px; 
+            display: flex; 
+            flex-direction: column; 
+            background: rgba(255, 255, 255, 0.35);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            height: 100%; 
+            box-shadow: var(--glass-shadow);
+            overflow: hidden;
+        }
+        
+        .chat-messages { 
+            flex: 1; 
+            padding: 24px 16px; 
+            overflow-y: auto; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 20px; 
+            scroll-behavior: smooth;
+        }
+
+        .message-row { display: flex; width: 100%; gap: 10px; align-items: flex-start;}
+        .animate-fade { animation: fadeIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* アバター */
+        .avatar {
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+            background: #ffffff;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        }
+
+        .ai-row { justify-content: flex-start; }
+        .user-row { justify-content: flex-end; flex-direction: row-reverse;}
+        
+        /* 吹き出しのグラスモーフィズム */
+        .ai-bubble { 
+            background: rgba(255, 255, 255, 0.85); 
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            color: var(--text-main); 
+            padding: 16px 20px; 
+            border-radius: 4px 20px 20px 20px; 
+            max-width: 85%; 
+            font-size: 0.95rem; 
+            border: 1px solid #ffffff; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+        }
+        
+        .user-bubble { 
+            background: rgba(59, 130, 246, 0.9); 
+            backdrop-filter: blur(8px);
+            color: #ffffff; 
+            padding: 12px 18px; 
+            border-radius: 20px 4px 20px 20px; 
+            max-width: 85%; 
+            font-size: 0.95rem; 
+            box-shadow: 0 4px 10px rgba(59, 130, 246, 0.2);
+        }
+
+        /* フォームカードのグラスモーフィズム */
+        .form-card {
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid #ffffff;
+            border-radius: 16px;
+            padding: 16px;
+            margin-top: 14px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            width: 100%;
+        }
+
+        .form-section-title {
+            background: rgba(255,255,255,0.7);
+            padding: 6px 10px;
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: var(--accent);
+            margin: 16px 0 10px 0;
+            border-radius: 6px;
+            display: inline-block;
+        }
+        .form-section-title:first-child { margin-top: 0; }
+
+        .input-group {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 8px; padding-bottom: 8px;
+            border-bottom: 1px dashed rgba(100,116,139,0.3);
+        }
+        .input-group:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        
+        .input-label { font-size: 0.85rem; font-weight: 700; color: var(--text-main); flex: 1; line-height: 1.3;}
+        
+        /* 入力欄のスタイル向上 */
+        .custom-label-input, .input-field-wrap input[type="number"] {
+            border: 1px solid rgba(255,255,255,0.8);
+            background: rgba(255,255,255,0.7);
+            border-radius: 8px;
+            padding: 8px;
+            font-size: 0.95rem;
+            color: #0f172a;
+            transition: all 0.2s;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+        }
+        .custom-label-input:focus, .input-field-wrap input[type="number"]:focus {
+            outline: none;
+            background: #ffffff;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+        }
+
+        .custom-label-input { flex: 1; margin-right: 8px; width: 100%; max-width: 130px; }
+        .input-field-wrap { display: flex; align-items: center; gap: 6px; font-size: 0.9rem; font-weight: bold; color: var(--text-muted);}
+        .input-field-wrap input[type="number"] { width: 85px; text-align: right; }
+
+        /* ボタンのスタイル向上 */
+        .submit-btn {
+            background: linear-gradient(135deg, var(--accent) 0%, #1d4ed8 100%);
+            color: white; border: none; width: 100%; padding: 14px;
+            border-radius: 12px; font-weight: bold; font-size: 1rem;
+            margin-top: 16px; cursor: pointer; transition: 0.3s;
+            box-shadow: 0 4px 15px rgba(59,130,246,0.4);
+        }
+        .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(59,130,246,0.5); }
+
+        .edit-btn, .add-btn {
+            background: rgba(255,255,255,0.6);
+            backdrop-filter: blur(4px);
+            color: var(--text-main);
+            border: 1px solid var(--glass-border);
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 0.85rem; font-weight: 700; cursor: pointer;
+            width: 100%; transition: 0.2s;
+        }
+        .edit-btn { margin-top: 12px; }
+        .add-btn { margin-bottom: 8px; border: 1px dashed var(--accent); color: var(--accent);}
+        .edit-btn:hover, .add-btn:hover { background: #ffffff; }
+        
+        .remove-btn { background: none; border: none; color: #ef4444; font-size: 1.2rem; cursor: pointer; padding: 0 4px; }
+
+        /* タイピングアニメーション */
+        .typing-dots { display: flex; gap: 4px; align-items: center; justify-content: center; padding: 16px 24px;}
+        .typing-dots span {
+            width: 6px; height: 6px; background-color: #94a3b8; border-radius: 50%;
+            animation: typing 1.4s infinite ease-in-out both;
+        }
+        .typing-dots span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dots span:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes typing { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+
+        /* 診断結果ダッシュボード */
+        .result-card { text-align: center; margin-top: 10px; width: 100%; }
+        .result-badge { display: inline-block; color: #ffffff; font-size: 1.1rem; font-weight: 800; padding: 10px 24px; border-radius: 30px; margin-bottom: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); letter-spacing: 0.5px;}
+        .result-message { font-size: 0.95rem; color: var(--text-main); text-align: left; background: rgba(255,255,255,0.7); padding: 16px; border-radius: 12px; border: 1px solid #ffffff; margin-bottom: 20px; line-height: 1.7; font-weight: 600;}
+        
+        .indicator-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+        .indicator-card { background: rgba(255,255,255,0.8); border: 1px solid #ffffff; border-radius: 12px; padding: 16px; text-align: left; box-shadow: 0 4px 10px rgba(0,0,0,0.02); display:flex; flex-direction: column; align-items: center; text-align: center;}
+        .ind-title { font-size: 0.75rem; color: var(--text-muted); font-weight: 800; margin-bottom: 8px; line-height: 1.2;}
+        .ind-value { font-size: 1.6rem; font-weight: 900; color: var(--text-main); margin-bottom: 8px;}
+        .ind-eval { font-size: 0.8rem; font-weight: 800; padding: 4px 10px; border-radius: 6px; display: inline-block; width: 100%;}
+        
+        /* 評価別カラー */
+        .eval-5 { background: #dcfce7; color: #166534; }
+        .eval-4 { background: #dbeafe; color: #1e40af; }
+        .eval-3 { background: #fef9c3; color: #854d0e; }
+        .eval-2 { background: #ffedd5; color: #9a3412; }
+        .eval-1 { background: #fee2e2; color: #991b1b; }
+
+        @media (max-width: 480px) { 
+            .indicator-grid { grid-template-columns: 1fr; } 
+            .chat-container { border-radius: 0; margin: 0; box-shadow: none; border: none;}
+            main { padding: 0; }
+        }
+
+        .cf-sheet { display: none; background: rgba(255,255,255,0.9); border: 2px solid var(--accent); padding: 16px; border-radius: 12px; text-align: left; font-size: 0.85rem; margin-top: 20px; }
+        .cf-sheet h3 { border-bottom: 2px solid var(--accent); padding-bottom: 6px; margin-bottom: 12px; color: var(--accent); font-weight: 800;}
+        .cf-row { display: flex; justify-content: space-between; border-bottom: 1px solid #e2e8f0; padding: 6px 0; }
+        .cf-row.total { font-weight: 800; background: rgba(241,245,249,0.8); padding: 8px 6px; border-bottom: none; border-radius: 6px; margin-top: 4px;}
+        .cf-row.sub-title { font-weight: 800; margin-top: 12px; border-bottom: 1px solid #cbd5e1; color: var(--text-main); }
+        .cf-row .indent { padding-left: 12px; color: var(--text-muted); font-weight: 600;}
+        
+        @media print {
+            body { background: white; overflow: visible; height: auto; }
+            header, .chat-messages .message-row:not(:last-child), .submit-btn, .edit-btn, .add-btn, .remove-btn { display: none; }
+            .cf-sheet { display: block !important; border: none; margin-top: 0; }
+            .chat-container { box-shadow: none; max-width: 100%; border: none; overflow: visible; background: none;}
+            .chat-messages { overflow: visible; }
+            #result-row .result-card { display: none; } 
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-text">
+            <h1>ライフプラン＆キャッシュフロー診断</h1>
+        </div>
+        <div class="progress-container"><div class="progress-bar" id="progressBar"></div></div>
+    </header>
+
+    <main>
+        <div class="chat-container">
+            <div class="chat-messages" id="chatMessages">
+                <div class="message-row ai-row animate-fade">
+                    <div class="avatar ai-avatar" style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="url(#ai-gradient)" stroke="none">
+        <defs>
+            <linearGradient id="ai-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#3b82f6" />
+                <stop offset="100%" stop-color="#6366f1" />
+            </linearGradient>
+        </defs>
+        <path d="M12 2L14.4 9.6L22 12L14.4 14.4L12 22L9.6 14.4L2 12L9.6 9.6L12 2Z"/>
+    </svg>
+</div>
+                    <div class="ai-bubble">
+                        こんにちは！詳細な項目から、現在の「家計の健康状態（筋肉質度）」を正確に診断します。<br><br>
+                        まずは、<strong>「基本情報」「収入」「現在の資産・負債」</strong>について教えてください。<br>
+                        <span style="font-size: 0.8rem; color:var(--text-muted);">※金額の単位はすべて<strong>「万円」</strong>でご入力ください。<br>（例：25万円の場合は「25」、1万5千円の場合は「1.5」）</span>
+                        
+                        <div class="form-card" id="step1-form">
+                            <div class="form-section-title">基本情報</div>
+                            <div class="input-group"><span class="input-label">年齢</span><div class="input-field-wrap"><input type="number" id="user_age" placeholder="0"> 歳</div></div>
+                            <div class="input-group"><span class="input-label">社会人歴（勤続）</span><div class="input-field-wrap"><input type="number" id="working_years" placeholder="0"> 年</div></div>
+                            
+                            <div class="form-section-title">収入</div>
+                            <div class="input-group"><span class="input-label">月収（額面）</span><div class="input-field-wrap"><input type="number" id="inc_gross" placeholder="0" step="0.1"> 万円</div></div>
+                            <div class="input-group"><span class="input-label">月収（手取り）</span><div class="input-field-wrap"><input type="number" id="inc_net" placeholder="0" step="0.1"> 万円</div></div>
+                            <div class="input-group" style="align-items: flex-start; padding-top:4px;">
+                                <span class="input-label" style="padding-top:8px;">ボーナス（手取り）</span>
+                                <div class="input-field-wrap" style="flex-direction: column; align-items: flex-end; gap:8px;">
+                                    <div>年 <input type="number" id="bonus_count" placeholder="0" style="width:50px;"> 回</div>
+                                    <div>計 <input type="number" id="bonus_total" placeholder="0" step="0.1"> 万円</div>
+                                </div>
+                            </div>
+
+                            <div class="form-section-title">現在の資産・負債</div>
+                            <div class="input-group"><span class="input-label">普通預金</span><div class="input-field-wrap"><input type="number" id="ast_ordinary" placeholder="0" step="0.1"> 万円</div></div>
+                            <div class="input-group"><span class="input-label">定期預金</span><div class="input-field-wrap"><input type="number" id="ast_time" placeholder="0" step="0.1"> 万円</div></div>
+                            <div class="input-group"><span class="input-label">その他（投資信託等）</span><div class="input-field-wrap"><input type="number" id="ast_other" placeholder="0" step="0.1"> 万円</div></div>
+                            <div class="input-group"><span class="input-label">各種ローン・奨学金<br><span style="font-size:0.7rem;font-weight:normal;">※残高総額（住宅ローン除く）</span></span><div class="input-field-wrap"><input type="number" id="debt_total" placeholder="0" step="0.1"> 万円</div></div>
+
+                            <button type="button" class="submit-btn" id="btn-step1" onclick="submitStep1()">次へ（固定費の入力へ）</button>
+                        </div>
+
+                        <div class="form-card" id="step1-summary" style="display: none; text-align: center;">
+                            <span style="font-size:0.95rem; font-weight:800; color:var(--text-main);">✅ 基本情報・資産の入力完了</span><br>
+                            <button type="button" class="edit-btn" onclick="toggleEdit('step1')">✏️ 内容を確認・修正する</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const chatMessages = document.getElementById('chatMessages');
+        let userData = {};
+        let highestStep = 1;
+
+        function scrollToBottom() {
+            setTimeout(() => { chatMessages.scrollTop = chatMessages.scrollHeight; }, 100);
+        }
+
+        function getVal(id) { 
+            const el = document.getElementById(id);
+            return el ? (Number(el.value) || 0) : 0; 
+        }
+
+        function getMoneyVal(id) {
+            const el = document.getElementById(id);
+            return el ? Math.round(Number(el.value) * 10000) || 0 : 0;
+        }
+
+        function toggleEdit(step) {
+            document.getElementById(step + '-form').style.display = 'block';
+            document.getElementById(step + '-summary').style.display = 'none';
+        }
+
+        // UX: タイピングアニメーションの制御
+        function showTypingIndicator(callback) {
+            const typingHtml = `
+            <div class="message-row ai-row animate-fade" id="typing-indicator">
+                <div class="avatar ai-avatar" style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="url(#ai-gradient)" stroke="none">
+        <defs>
+            <linearGradient id="ai-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#3b82f6" />
+                <stop offset="100%" stop-color="#6366f1" />
+            </linearGradient>
+        </defs>
+        <path d="M12 2L14.4 9.6L22 12L14.4 14.4L12 22L9.6 14.4L2 12L9.6 9.6L12 2Z"/>
+    </svg>
+</div>                <div class="ai-bubble typing-dots"><span></span><span></span><span></span></div>
+            </div>`;
+            chatMessages.insertAdjacentHTML('beforeend', typingHtml);
+            scrollToBottom();
+            setTimeout(() => {
+                const indicator = document.getElementById('typing-indicator');
+                if (indicator) indicator.remove();
+                callback();
+            }, 1500); // 1.5秒間考えているフリ
+        }
+
+        // UX: 数字のカウントアップアニメーション
+        function animateNumbers() {
+            document.querySelectorAll('.count-up').forEach(el => {
+                let target = parseFloat(el.getAttribute('data-val'));
+                let duration = 1200; // 1.2秒かけてカウントアップ
+                let start = 0;
+                let startTime = null;
+                function step(timestamp) {
+                    if (!startTime) startTime = timestamp;
+                    let progress = timestamp - startTime;
+                    let current = Math.min(start + (target - start) * (progress / duration), target);
+                    el.innerText = current.toFixed(1);
+                    if (progress < duration) {
+                        window.requestAnimationFrame(step);
+                    } else {
+                        el.innerText = target.toFixed(1);
+                    }
+                }
+                window.requestAnimationFrame(step);
+            });
+        }
+
+        // ==========================
+        // Step 1: 収入・資産
+        // ==========================
+        function submitStep1() {
+            userData.user_age = getVal('user_age');
+            userData.working_years = getVal('working_years');
+            
+            userData.inc_gross = getMoneyVal('inc_gross');
+            userData.inc_net = getMoneyVal('inc_net');
+            userData.bonus_count = getVal('bonus_count');
+            userData.bonus_total = getMoneyVal('bonus_total');
+            userData.annualIncome = (userData.inc_net * 12) + userData.bonus_total;
+            
+            userData.ast_ordinary = getMoneyVal('ast_ordinary');
+            userData.ast_time = getMoneyVal('ast_time');
+            userData.ast_other = getMoneyVal('ast_other');
+            userData.debt_total = getMoneyVal('debt_total');
+            
+            userData.totalAssets = userData.ast_ordinary + userData.ast_time + userData.ast_other;
+            userData.netWorth = userData.totalAssets - userData.debt_total;
+
+            document.getElementById('step1-form').style.display = 'none';
+            document.getElementById('step1-summary').style.display = 'block';
+            document.getElementById('btn-step1').innerText = "修正を反映する"; 
+
+            if (highestStep < 2) {
+                highestStep = 2;
+                document.getElementById('progressBar').style.width = "66%";
+                showTypingIndicator(generateStep2);
+            } else if (highestStep === 4) {
+                showTypingIndicator(calculateResult);
+            }
+        }
+
+        // ==========================
+        // Step 2: 固定費
+        // ==========================
+        function generateStep2() {
+            const html = `
+            <div class="message-row ai-row animate-fade">
+                <div class="avatar ai-avatar" style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="url(#ai-gradient)" stroke="none">
+        <defs>
+            <linearGradient id="ai-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#3b82f6" />
+                <stop offset="100%" stop-color="#6366f1" />
+            </linearGradient>
+        </defs>
+        <path d="M12 2L14.4 9.6L22 12L14.4 14.4L12 22L9.6 14.4L2 12L9.6 9.6L12 2Z"/>
+    </svg>
+</div>
+                <div class="ai-bubble">
+                    ありがとうございます！<br>次に、毎月必ずかかっている<strong>「固定費」</strong>を教えてください。
+                    
+                    <div class="form-card" id="step2-form">
+                        <div class="input-group"><span class="input-label">家賃・住宅ローン<br><span style="font-size:0.7rem;font-weight:normal;">(月額)</span></span><div class="input-field-wrap"><input type="number" id="fx_rent" placeholder="0" step="0.1"> 万円</div></div>
+                        
+                        <div class="form-section-title">水道光熱・通信費</div>
+                        <div class="input-group"><span class="input-label">電気</span><div class="input-field-wrap"><input type="number" id="fx_elec" placeholder="0" step="0.1"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">ガス</span><div class="input-field-wrap"><input type="number" id="fx_gas" placeholder="0" step="0.1"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">水道</span><div class="input-field-wrap"><input type="number" id="fx_water" placeholder="0" step="0.1"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">携帯電話</span><div class="input-field-wrap"><input type="number" id="fx_mobile" placeholder="0" step="0.1"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">通信（ネット等）</span><div class="input-field-wrap"><input type="number" id="fx_net" placeholder="0" step="0.1"> 万円</div></div>
+
+                        <div class="form-section-title">保険・ローン関連</div>
+                        <div class="input-group"><span class="input-label">自動車保険</span><div class="input-field-wrap"><input type="number" id="fx_ins_car" placeholder="0" step="0.1"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">医療保険</span><div class="input-field-wrap"><input type="number" id="fx_ins_med" placeholder="0" step="0.1"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">生命保険</span><div class="input-field-wrap"><input type="number" id="fx_ins_life" placeholder="0" step="0.1"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">その他保険</span><div class="input-field-wrap"><input type="number" id="fx_ins_other" placeholder="0" step="0.1"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">その他ローン<br><span style="font-size:0.7rem;font-weight:normal;">(車・カード等 月額)</span></span><div class="input-field-wrap"><input type="number" id="fx_loan" placeholder="0" step="0.1"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">奨学金(月額返済)</span><div class="input-field-wrap"><input type="number" id="fx_scholarship" placeholder="0" step="0.1"> 万円</div></div>
+
+                        <button type="button" class="submit-btn" id="btn-step2" onclick="submitStep2()">次へ（変動費の入力へ）</button>
+                    </div>
+
+                    <div class="form-card" id="step2-summary" style="display: none; text-align: center;">
+                        <span style="font-size:0.95rem; font-weight:800; color:var(--text-main);">✅ 固定費の入力完了</span><br>
+                        <button type="button" class="edit-btn" onclick="toggleEdit('step2')">✏️ 内容を確認・修正する</button>
+                    </div>
+                </div>
+            </div>`;
+            chatMessages.insertAdjacentHTML('beforeend', html);
+            scrollToBottom();
+        }
+
+        function submitStep2() {
+            userData.fx_rent = getMoneyVal('fx_rent');
+            userData.fx_elec = getMoneyVal('fx_elec'); userData.fx_gas = getMoneyVal('fx_gas'); userData.fx_water = getMoneyVal('fx_water');
+            userData.fx_mobile = getMoneyVal('fx_mobile'); userData.fx_net = getMoneyVal('fx_net');
+            userData.fx_ins_car = getMoneyVal('fx_ins_car'); userData.fx_ins_med = getMoneyVal('fx_ins_med'); 
+            userData.fx_ins_life = getMoneyVal('fx_ins_life'); userData.fx_ins_other = getMoneyVal('fx_ins_other');
+            userData.fx_loan = getMoneyVal('fx_loan'); userData.fx_scholarship = getMoneyVal('fx_scholarship');
+            
+            userData.monthlyFixed = userData.fx_rent + userData.fx_elec + userData.fx_gas + userData.fx_water + 
+                                    userData.fx_mobile + userData.fx_net + userData.fx_ins_car + userData.fx_ins_med + 
+                                    userData.fx_ins_life + userData.fx_ins_other + userData.fx_loan + userData.fx_scholarship;
+
+            document.getElementById('step2-form').style.display = 'none';
+            document.getElementById('step2-summary').style.display = 'block';
+            document.getElementById('btn-step2').innerText = "修正を反映する";
+
+            if (highestStep < 3) {
+                highestStep = 3;
+                document.getElementById('progressBar').style.width = "100%";
+                showTypingIndicator(generateStep3);
+            } else if (highestStep === 4) {
+                showTypingIndicator(calculateResult);
+            }
+        }
+
+        // ==========================
+        // Step 3: 変動費
+        // ==========================
+        function addOtherItem() {
+            const container = document.getElementById('dynamic-other-container');
+            const html = `
+            <div class="input-group other-item">
+                <input type="text" class="custom-label-input other-label" placeholder="例: サブスク代">
+                <div class="input-field-wrap">
+                    <input type="number" class="other-value" placeholder="0" step="0.1"> 万円
+                    <button type="button" class="remove-btn" onclick="this.parentElement.parentElement.remove()">×</button>
+                </div>
+            </div>`;
+            container.insertAdjacentHTML('beforeend', html);
+        }
+
+        function generateStep3() {
+            const html = `
+            <div class="message-row ai-row animate-fade">
+                <div class="avatar ai-avatar" style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="url(#ai-gradient)" stroke="none">
+        <defs>
+            <linearGradient id="ai-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#3b82f6" />
+                <stop offset="100%" stop-color="#6366f1" />
+            </linearGradient>
+        </defs>
+        <path d="M12 2L14.4 9.6L22 12L14.4 14.4L12 22L9.6 14.4L2 12L9.6 9.6L12 2Z"/>
+    </svg>
+</div>
+                <div class="ai-bubble">
+                    あと少しです！最後に、食費や日用品などの<strong>「変動費（月額平均）」</strong>を教えてください。
+                    
+                    <div class="form-card" id="step3-form">
+                        <div class="form-section-title">食費・交通費</div>
+                        <div class="input-group"><span class="input-label">食費（自宅）</span><div class="input-field-wrap"><input type="number" id="vr_food_home" placeholder="0" step="0.1"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">食費（外食）</span><div class="input-field-wrap"><input type="number" id="vr_food_out" placeholder="0" step="0.1"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">ガソリン</span><div class="input-field-wrap"><input type="number" id="vr_gasoline" placeholder="0" step="0.1"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">その他交通</span><div class="input-field-wrap"><input type="number" id="vr_transport" placeholder="0" step="0.1"> 万円</div></div>
+                        
+                        <div class="form-section-title">生活・教育・娯楽</div>
+                        <div class="input-group"><span class="input-label">医療費</span><div class="input-field-wrap"><input type="number" id="vr_medical" placeholder="0" step="0.1"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">学費・習い事</span><div class="input-field-wrap"><input type="number" id="vr_edu" placeholder="0" step="0.1"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">被服</span><div class="input-field-wrap"><input type="number" id="vr_clothes" placeholder="0" step="0.1"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">美容室</span><div class="input-field-wrap"><input type="number" id="vr_hair" placeholder="0" step="0.1"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">化粧品</span><div class="input-field-wrap"><input type="number" id="vr_cosme" placeholder="0" step="0.1"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">その他娯楽・趣味</span><div class="input-field-wrap"><input type="number" id="vr_hobby" placeholder="0" step="0.1"> 万円</div></div>
+                        
+                        <div class="form-section-title">その他（項目名を自由に追加できます）</div>
+                        <div id="dynamic-other-container">
+                            <div class="input-group other-item">
+                                <input type="text" class="custom-label-input other-label" placeholder="例: 日用品費">
+                                <div class="input-field-wrap">
+                                    <input type="number" class="other-value" placeholder="0" step="0.1"> 万円
+                                    <button type="button" class="remove-btn" onclick="this.parentElement.parentElement.remove()">×</button>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="add-btn" onclick="addOtherItem()">＋ 項目を追加する</button>
+
+                        <button type="button" class="submit-btn" id="btn-step3" onclick="submitStep3()">診断結果を見る</button>
+                    </div>
+
+                    <div class="form-card" id="step3-summary" style="display: none; text-align: center;">
+                        <span style="font-size:0.95rem; font-weight:800; color:var(--text-main);">✅ 変動費の入力完了</span><br>
+                        <button type="button" class="edit-btn" onclick="toggleEdit('step3')">✏️ 内容を確認・修正する</button>
+                    </div>
+                </div>
+            </div>`;
+            chatMessages.insertAdjacentHTML('beforeend', html);
+            scrollToBottom();
+        }
+
+        function submitStep3() {
+            userData.vr_food_home = getMoneyVal('vr_food_home'); userData.vr_food_out = getMoneyVal('vr_food_out');
+            userData.vr_gasoline = getMoneyVal('vr_gasoline'); userData.vr_transport = getMoneyVal('vr_transport');
+            userData.vr_medical = getMoneyVal('vr_medical'); userData.vr_edu = getMoneyVal('vr_edu');
+            userData.vr_clothes = getMoneyVal('vr_clothes'); userData.vr_hair = getMoneyVal('vr_hair');
+            userData.vr_cosme = getMoneyVal('vr_cosme'); userData.vr_hobby = getMoneyVal('vr_hobby');
+            
+            userData.otherItems = [];
+            let otherTotal = 0;
+            document.querySelectorAll('.other-item').forEach(item => {
+                const label = item.querySelector('.other-label').value.trim() || "その他支出";
+                const val = Math.round(Number(item.querySelector('.other-value').value) * 10000) || 0;
+                if (val > 0 || label !== "その他支出") {
+                    userData.otherItems.push({ label, val });
+                    otherTotal += val;
+                }
+            });
+
+            userData.monthlyVar = userData.vr_food_home + userData.vr_food_out + userData.vr_gasoline + 
+                                  userData.vr_transport + userData.vr_medical + userData.vr_edu + 
+                                  userData.vr_clothes + userData.vr_hair + userData.vr_cosme + 
+                                  userData.vr_hobby + otherTotal;
+            
+            document.getElementById('step3-form').style.display = 'none';
+            document.getElementById('step3-summary').style.display = 'block';
+            document.getElementById('btn-step3').innerText = "修正を反映して再計算する";
+
+            highestStep = 4;
+            showTypingIndicator(calculateResult);
+        }
+
+        // ==========================
+        // 結果計算と出力
+        // ==========================
+        function calculateResult() {
+            // 基本の計算
+            const monthlyTotalExp = userData.monthlyFixed + userData.monthlyVar; 
+            const annualTotalExp = monthlyTotalExp * 12; 
+            const monthlySavings = userData.inc_net - monthlyTotalExp; 
+            const annualSavings = userData.annualIncome - annualTotalExp; 
+            
+            const netWorth = userData.netWorth; 
+            
+            const lifetimeIncome = userData.annualIncome * userData.working_years;
+            const conversionRate = lifetimeIncome > 0 ? (netWorth / lifetimeIncome) * 100 : 0;
+            let score1 = 0, text1 = "", class1 = "";
+            let y = userData.working_years;
+            if (y <= 5) {
+                if(conversionRate >= 15) {score1=5; text1="優良"; class1="eval-5";} else if(conversionRate >= 8) {score1=4; text1="良好"; class1="eval-4";} else if(conversionRate >= 3) {score1=3; text1="標準"; class1="eval-3";} else {score1=1; text1="要改善"; class1="eval-1";}
+            } else if (y <= 15) {
+                if(conversionRate >= 20) {score1=5; text1="優良"; class1="eval-5";} else if(conversionRate >= 12) {score1=4; text1="良好"; class1="eval-4";} else if(conversionRate >= 6) {score1=3; text1="標準"; class1="eval-3";} else {score1=1; text1="要改善"; class1="eval-1";}
+            } else if (y <= 25) {
+                if(conversionRate >= 25) {score1=5; text1="優良"; class1="eval-5";} else if(conversionRate >= 15) {score1=4; text1="良好"; class1="eval-4";} else if(conversionRate >= 8) {score1=3; text1="標準"; class1="eval-3";} else {score1=1; text1="要改善"; class1="eval-1";}
+            } else {
+                if(conversionRate >= 30) {score1=5; text1="優良"; class1="eval-5";} else if(conversionRate >= 20) {score1=4; text1="良好"; class1="eval-4";} else if(conversionRate >= 12) {score1=3; text1="標準"; class1="eval-3";} else {score1=1; text1="要改善"; class1="eval-1";}
+            }
+
+            const expectedNetWorth = userData.user_age > 22 ? ((userData.user_age - 22) * userData.annualIncome) / 12 : 0;
+            const achievementRate = expectedNetWorth > 0 ? (netWorth / expectedNetWorth) * 100 : (netWorth > 0 ? 100 : 0);
+            let score2 = 0, text2 = "", class2 = "";
+            if (achievementRate >= 120) {score2=5; text2="非常に優秀"; class2="eval-5";} 
+            else if (achievementRate >= 80) {score2=4; text2="優秀"; class2="eval-4";} 
+            else if (achievementRate >= 50) {score2=3; text2="標準的"; class2="eval-3";} 
+            else if (achievementRate >= 30) {score2=2; text2="要改善"; class2="eval-2";} 
+            else {score2=1; text2="要緊急対応"; class2="eval-1";}
+
+            const livingDefenseFund = monthlyTotalExp * 6; 
+            const operationalAssets = userData.ast_other; 
+            let efficiencyRate = 0;
+            let effBase = userData.totalAssets - livingDefenseFund;
+            if (effBase > 0) { efficiencyRate = (operationalAssets / effBase) * 100; } 
+            else if (operationalAssets > 0) { efficiencyRate = 100; }
+
+            let score3 = 0, text3 = "", class3 = "";
+            if (netWorth < 3000000) {
+                if (effBase <= 0 && operationalAssets === 0) {score3=5; text3="優良(現金重視)"; class3="eval-5";} 
+                else if (efficiencyRate >= 10 && efficiencyRate <= 20) {score3=4; text3="良好"; class3="eval-4";}
+                else if (efficiencyRate >= 5 && efficiencyRate < 10) {score3=3; text3="標準"; class3="eval-3";}
+                else if (operationalAssets === 0) {score3=1; text3="要改善(投資未着手)"; class3="eval-1";}
+                else {score3=2; text3="注意(現金不足)"; class3="eval-2";}
+            } else if (netWorth < 10000000) {
+                if (efficiencyRate >= 30) {score3=5; text3="優良"; class3="eval-5";} else if (efficiencyRate >= 20) {score3=4; text3="良好"; class3="eval-4";} else if (efficiencyRate >= 10) {score3=3; text3="標準"; class3="eval-3";} else {score3=1; text3="要改善"; class3="eval-1";}
+            } else {
+                if (efficiencyRate >= 50) {score3=5; text3="優良"; class3="eval-5";} else if (efficiencyRate >= 35) {score3=4; text3="良好"; class3="eval-4";} else if (efficiencyRate >= 20) {score3=3; text3="標準"; class3="eval-3";} else {score3=1; text3="要改善"; class3="eval-1";}
+            }
+
+            const assumedPension = 1200000;
+            const shortfall = annualTotalExp - assumedPension;
+            const requiredAssetsForFire = shortfall > 0 ? shortfall * 25 : 0;
+            const fireProgressRate = requiredAssetsForFire > 0 ? (netWorth / requiredAssetsForFire) * 100 : (shortfall <= 0 ? 100 : 0);
+            
+            let score4 = 0, text4 = "", class4 = "";
+            if (fireProgressRate >= 100) {score4=5; text4="目標達成"; class4="eval-5";} 
+            else if (fireProgressRate >= 60) {score4=4; text4="順調"; class4="eval-4";} 
+            else if (fireProgressRate >= 30) {score4=3; text4="標準的"; class4="eval-3";} 
+            else if (fireProgressRate >= 10) {score4=2; text4="要改善"; class4="eval-2";} 
+            else {score4=1; text4="準備不足"; class4="eval-1";}
+
+            let totalScore = (score1 + score2 + score3 + score4) / 4;
+            let typeName = "", msg = "", badgeColor = "";
+
+            if (totalScore >= 4.5) {
+                typeName = "🏅 アスリート級！超・筋肉質家計"; badgeColor = "linear-gradient(135deg, #059669 0%, #047857 100%)";
+                msg = "無駄な脂肪（支出）がなく、お金が力強く働いている最高レベルの状態です！今のペースを維持できれば完璧です。さらなる高みを目指して資産の最適化を図りましょう。";
+            } else if (totalScore >= 3.5) {
+                typeName = "💪 引き締まった細マッチョ家計"; badgeColor = "linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)";
+                msg = "日々の節制ができており、とても健康で引き締まった良い家計状態です。素晴らしいですね！あとは『お金の筋トレ（運用）』を少し強化すると、さらに盤石になります。";
+            } else if (totalScore >= 2.5) {
+                typeName = "🏃 健康的な標準体型家計"; badgeColor = "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)";
+                msg = "大きな問題はありませんが、将来に向けて少し体力をつけていきたい状態です。まずは無理のない範囲で、基礎代謝を上げる（固定費を下げる）ところから始めましょう！";
+            } else if (totalScore >= 1.5) {
+                typeName = "🛋️ 運動不足のぽっちゃり家計"; badgeColor = "linear-gradient(135deg, #ea580c 0%, #c2410c 100%)";
+                msg = "少しずつ見えない脂肪（ラテマネーやサブスク等）が蓄積してしまっている状態です。少しずつ家計のダイエットが必要です！まずは現状の支出を把握して、一緒に整理していきましょう。";
+            } else {
+                typeName = "⚠️ メタボ警報！要ダイエット家計"; badgeColor = "linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)";
+                msg = "収入に対して支出や負債が多く、早急な体質改善（家計の見直し）が必要な状態です。まずは止血（赤字解消）と、防衛資金（現金）を貯める基礎トレーニングから伴走します！";
+            }
+
+            let otherItemsHtml = "";
+            userData.otherItems.forEach(item => {
+                otherItemsHtml += `<div class="cf-row"><span class="indent">${item.label}</span><span>${item.val.toLocaleString()} 円</span></div>`;
+            });
+
+            const sheetHtml = `
+                <div class="cf-sheet" id="cfSheet">
+                    <h3>キャッシュフロー・資産チェックシート</h3>
+
+                    <div class="cf-row sub-title"><span>【分析結果】</span></div>
+                    <div class="cf-row total" style="color:var(--accent);"><span>【月間資産形成可能額】<br><span style="font-size:0.7rem; font-weight:normal;">① - ③</span></span><span>${monthlySavings.toLocaleString()} 円</span></div>
+                    <div class="cf-row total" style="color:var(--accent);"><span>【年間資産形成可能額】<br><span style="font-size:0.7rem; font-weight:normal;">④ - ⑤</span></span><span>${annualSavings.toLocaleString()} 円</span></div>
+                    
+                    <div class="cf-row sub-title"><span>【収入】</span></div>
+                    <div class="cf-row"><span>月収（額面）</span><span>${userData.inc_gross.toLocaleString()} 円</span></div>
+                    <div class="cf-row"><span>月収（手取）①</span><span>${userData.inc_net.toLocaleString()} 円</span></div>
+                    <div class="cf-row"><span>ボーナス（年 ${userData.bonus_count} 回）②</span><span>計 ${userData.bonus_total.toLocaleString()} 円</span></div>
+                    <div class="cf-row total"><span>【手取り年収】④ <br><span style="font-size:0.7rem; font-weight:normal;">(①×12ヵ月) + ②</span></span><span>${userData.annualIncome.toLocaleString()} 円</span></div>
+                    
+                    <div class="cf-row sub-title"><span>【支出】</span></div>
+                    <div class="cf-row"><span class="indent">家賃・住宅ローン</span><span>${userData.fx_rent.toLocaleString()} 円</span></div>
+                    <div class="cf-row"><span class="indent">電気</span><span>${userData.fx_elec.toLocaleString()} 円</span></div>
+                    <div class="cf-row"><span class="indent">ガス</span><span>${userData.fx_gas.toLocaleString()} 円</span></div>
+                    <div class="cf-row"><span class="indent">水道</span><span>${userData.fx_water.toLocaleString()} 円</span></div>
+                    <div class="cf-row"><span class="indent">携帯電話</span><span>${userData.fx_mobile.toLocaleString()} 円</span></div>
+                    <div class="cf-row"><span class="indent">通信</span><span>${userData.fx_net.toLocaleString()} 円</span></div>
+                    <div class="cf-row"><span class="indent">食費・自宅</span><span>${userData.vr_food_home.toLocaleString()} 円</span></div>
+                    <div class="cf-row"><span class="indent">食費・外食</span><span>${userData.vr_food_out.toLocaleString()} 円</span></div>
+                    <div class="cf-row"><span class="indent">ガソリン</span><span>${userData.vr_gasoline.toLocaleString()} 円</span></div>
+                    <div class="cf-row"><span class="indent">その他交通</span><span>${userData.vr_transport.toLocaleString()} 円</span></div>
+                    <div class="cf-row"><span class="indent">保険・自動車保険</span><span>${userData.fx_ins_car.toLocaleString()} 円</span></div>
+                    <div class="cf-row"><span class="indent">保険・医療保険</span><span>${userData.fx_ins_med.toLocaleString()} 円</span></div>
+                    <div class="cf-row"><span class="indent">保険・生命保険</span><span>${userData.fx_ins_life.toLocaleString()} 円</span></div>
+                    <div class="cf-row"><span class="indent">保険・その他保険</span><span>${userData.fx_ins_other.toLocaleString()} 円</span></div>
+                    <div class="cf-row"><span class="indent">医療</span><span>${userData.vr_medical.toLocaleString()} 円</span></div>
+                    <div class="cf-row"><span class="indent">学費・習い事</span><span>${userData.vr_edu.toLocaleString()} 円</span></div>
+                    <div class="cf-row"><span class="indent">被服</span><span>${userData.vr_clothes.toLocaleString()} 円</span></div>
+                    <div class="cf-row"><span class="indent">美容室</span><span>${userData.vr_hair.toLocaleString()} 円</span></div>
+                    <div class="cf-row"><span class="indent">化粧品</span><span>${userData.vr_cosme.toLocaleString()} 円</span></div>
+                    <div class="cf-row"><span class="indent">その他娯楽・趣味</span><span>${userData.vr_hobby.toLocaleString()} 円</span></div>
+                    <div class="cf-row"><span class="indent">その他ローン(返済)</span><span>${userData.fx_loan.toLocaleString()} 円</span></div>
+                    <div class="cf-row"><span class="indent">奨学金(返済)</span><span>${userData.fx_scholarship.toLocaleString()} 円</span></div>
+                    ${otherItemsHtml}
+                    <div class="cf-row total"><span>合計 ③</span><span>${monthlyTotalExp.toLocaleString()} 円</span></div>
+                    <div class="cf-row total"><span>【年間支出】⑤ <br><span style="font-size:0.7rem; font-weight:normal;">③×12ヵ月</span></span><span>${annualTotalExp.toLocaleString()} 円</span></div>
+
+                    <div class="cf-row sub-title"><span>【資産・負債バランス】</span></div>
+                    <div class="cf-row"><span class="indent">金融資産（預金＋投資）</span><span>${userData.totalAssets.toLocaleString()} 円</span></div>
+                    <div class="cf-row" style="color:#b91c1c;"><span class="indent">負債総額</span><span>▲ ${userData.debt_total.toLocaleString()} 円</span></div>
+                    <div class="cf-row total" style="color:#0f172a;"><span>【純金融資産額】</span><span>${netWorth.toLocaleString()} 円</span></div>
+                </div>
+            `;
+
+            const existingResult = document.getElementById('result-row');
+            if (existingResult) {
+                existingResult.remove();
+            }
+
+            const resultHtml = `
+            <div class="message-row ai-row animate-fade" id="result-row">
+                <div class="avatar ai-avatar" style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="url(#ai-gradient)" stroke="none">
+        <defs>
+            <linearGradient id="ai-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#3b82f6" />
+                <stop offset="100%" stop-color="#6366f1" />
+            </linearGradient>
+        </defs>
+        <path d="M12 2L14.4 9.6L22 12L14.4 14.4L12 22L9.6 14.4L2 12L9.6 9.6L12 2Z"/>
+    </svg>
+</div>
+                <div class="ai-bubble" style="width: 100%; max-width: 100%;">
+                    分析が完了しました！あなたの診断結果はこちらです。<br><br>
+                    <div class="result-card">
+                        <div class="result-badge" style="background: ${badgeColor};">${typeName}</div>
+                        <div class="result-message">${msg}</div>
+                        
+                        <div class="indicator-grid">
+                            <div class="indicator-card">
+                                <span class="ind-title">① 生涯のお金貯蓄率</span>
+                                <span class="ind-value"><span class="count-up" data-val="${Math.max(0, conversionRate).toFixed(1)}">0.0</span> <span style="font-size:0.8rem;">%</span></span>
+                                <span class="ind-eval ${class1}">${text1}</span>
+                            </div>
+                            <div class="indicator-card">
+                                <span class="ind-title">② 同世代比較・資産達成度</span>
+                                <span class="ind-value"><span class="count-up" data-val="${Math.max(0, achievementRate).toFixed(1)}">0.0</span> <span style="font-size:0.8rem;">%</span></span>
+                                <span class="ind-eval ${class2}">${text2}</span>
+                            </div>
+                            <div class="indicator-card">
+                                <span class="ind-title">③ お金の筋トレ度</span>
+                                <span class="ind-value"><span class="count-up" data-val="${Math.max(0, efficiencyRate).toFixed(1)}">0.0</span> <span style="font-size:0.8rem;">%</span></span>
+                                <span class="ind-eval ${class3}">${text3}</span>
+                            </div>
+                            <div class="indicator-card">
+                                <span class="ind-title">④ 将来の自由度スコア</span>
+                                <span class="ind-value"><span class="count-up" data-val="${Math.max(0, fireProgressRate).toFixed(1)}">0.0</span> <span style="font-size:0.8rem;">%</span></span>
+                                <span class="ind-eval ${class4}">${text4}</span>
+                            </div>
+                        </div>
+
+                        <button type="button" class="submit-btn" style="background:rgba(255,255,255,0.8); color:var(--text-main); border: 1px solid var(--accent);" onclick="document.getElementById('cfSheet').style.display='block';">📊 詳細シートを表示する</button>
+                        <button type="button" class="submit-btn" style="margin-top:8px;" onclick="window.print()">🖨️ シートをPDF印刷</button>
+                    </div>
+                    ${sheetHtml}
+                </div>
+            </div>`;
+            
+            chatMessages.insertAdjacentHTML('beforeend', resultHtml);
+            scrollToBottom();
+            
+            // カウントアップアニメーションを発火
+            setTimeout(animateNumbers, 100);
+        }
+    </script>
+</body>
+</html>
