@@ -419,7 +419,8 @@ function estimatePension(d) {
   const selfMonthly = pensionForPerson(d.employment, d.gender);
   const selfLabel   = personLabel(d.employment, d.gender);
 
-  const hasSpouse = (d.dual_income === '共働き' || d.dual_income === '片働き');
+  const hasSpouse = d.household !== '独身（単身）' && d.household !== 'ひとり親＋子ども'
+    && (d.dual_income === '共働き' || d.dual_income === '片働き');
 
   if (!hasSpouse) {
     return {
@@ -467,6 +468,8 @@ function doPost(e) {
     }
 
     const d = body.data || {};
+    const invalid = validateSubmittedNumbers(d);
+    if (invalid) return json({ ok: false, error: invalid + ' は0以上の数値で入力してください' });
     const result = judge(d);
 
     try {
@@ -484,6 +487,23 @@ function doPost(e) {
   }
 }
 
+function validateSubmittedNumbers(d) {
+  const plainNumbers = new Set([
+    'user_age', 'youngest_child_age', 'working_years', 'bonus_count',
+    'bonus_total', 'annualIncome', 'totalAssets', 'monthlyFixed', 'monthlyVar'
+  ]);
+  for (const key of Object.keys(d)) {
+    if (!(/^(inc_|ast_|debt_|fx_|vr_)/.test(key) || plainNumbers.has(key))) continue;
+    const value = Number(d[key]);
+    if (!Number.isFinite(value) || value < 0) return key;
+  }
+  if (Array.isArray(d.otherItems)) {
+    for (const item of d.otherItems) {
+      if (!Number.isFinite(Number(item.val)) || Number(item.val) < 0) return 'otherItems';
+    }
+  }
+  return '';
+}
 /** 疎通確認用。ブラウザでウェブアプリURLを開くと {"ok":true,...} が出れば成功。 */
 function doGet() {
   return json({ ok: true, msg: 'endpoint alive' });
@@ -789,7 +809,20 @@ function appendRow(body, d, r) {
     rec.otherItems     = (d.otherItems || [])
       .map(x => x.label + ':' + x.val).join(' / ');
 
-    sh.appendRow(COLS.map(k => (rec[k] === undefined || rec[k] === null) ? '' : rec[k]));
+    const rowValues = COLS.map(k => (rec[k] === undefined || rec[k] === null) ? '' : rec[k]);
+    // 同じ画面で入力を修正した場合は、同一回答を更新して重複集計を防ぐ。
+    if (rec.sessionId && rec.consentedAt && sh.getLastRow() > 1) {
+      const matches = sh.getRange(2, 7, sh.getLastRow() - 1, 1)
+        .createTextFinder(rec.consentedAt).matchEntireCell(true).findAll();
+      for (const match of matches) {
+        const row = match.getRow();
+        if (sh.getRange(row, 2).getValue() === rec.sessionId) {
+          sh.getRange(row, 1, 1, COLS.length).setValues([rowValues]);
+          return;
+        }
+      }
+    }
+    sh.appendRow(rowValues);
   } finally {
     lock.releaseLock();
   }
