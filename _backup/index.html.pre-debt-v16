@@ -466,7 +466,7 @@
         const CONFIG = {
             endpoint:       'https://script.google.com/macros/s/AKfycbwgldxZN5HQGHp9OvU6UhV6LGcqPKeolzozX7hDAQBay35HA3PMcJQOOgMji5bupyaK/exec',
             token:          'test',
-            appVersion:     'v1.7.0',
+            appVersion:     'v1.5.0',
             consentVersion: '2026-09-21'
         };
 
@@ -548,17 +548,17 @@
 
                     <div class="form-card" id="step1-form">
                         <div class="form-section-title">あなたについて</div>
-                        <div class="input-group"><span class="input-label">年齢</span><div class="input-field-wrap"><input type="number" min="0" id="user_age" placeholder="0"> 歳</div></div>
+                        <div class="input-group"><span class="input-label">年齢</span><div class="input-field-wrap"><input type="number" id="user_age" placeholder="0"> 歳</div></div>
                         <div class="input-group sel"><span class="input-label">性別</span><div class="input-field-wrap"><select id="gender" required>${opts(GENDERS, '選択してください')}</select></div></div>
                         <div class="input-group sel"><span class="input-label">お住まい</span><div class="input-field-wrap"><select id="pref" required>${opts(PREFS, '都道府県を選択')}</select></div></div>
-                        <div class="input-group sel"><span class="input-label">世帯構成</span><div class="input-field-wrap"><select id="household" required onchange="onDualIncomeChange()">${opts(HOUSEHOLDS, '選択してください')}</select></div></div>
+                        <div class="input-group sel"><span class="input-label">世帯構成</span><div class="input-field-wrap"><select id="household" required>${opts(HOUSEHOLDS, '選択してください')}</select></div></div>
                         <div class="input-group sel"><span class="input-label">お子さまの人数</span><div class="input-field-wrap"><select id="children" required onchange="onChildrenChange()">${opts(CHILDREN, '選択してください')}</select></div></div>
-                        <div class="input-group" id="youngest-row" style="display:none;"><span class="input-label">いちばん下のお子さまの年齢</span><div class="input-field-wrap"><input type="number" min="0" id="youngest_child_age" placeholder="0"> 歳</div></div>
+                        <div class="input-group" id="youngest-row" style="display:none;"><span class="input-label">いちばん下のお子さまの年齢</span><div class="input-field-wrap"><input type="number" id="youngest_child_age" placeholder="0"> 歳</div></div>
                         <div class="input-group sel"><span class="input-label">住居の形態 <span class="attr-note">※家賃欄の解釈に使用</span></span><div class="input-field-wrap"><select id="housing" required>${opts(HOUSINGS, '選択してください')}</select></div></div>
                         <div class="input-group sel"><span class="input-label">就業形態</span><div class="input-field-wrap"><select id="employment" required>${opts(EMPLOYS, '選択してください')}</select></div></div>
                         <div class="input-group sel"><span class="input-label">世帯の働き方</span><div class="input-field-wrap"><select id="dual_income" required onchange="onDualIncomeChange()">${opts(DUALS, '選択してください')}</select></div></div>
                         <div class="input-group sel" id="spouse-emp-row" style="display:none;"><span class="input-label">配偶者の就業形態 <span class="attr-note">※年金の試算に使用</span></span><div class="input-field-wrap"><select id="spouse_employment">${opts(SPOUSE_EMP, '選択してください')}</select></div></div>
-                        <div class="input-group"><span class="input-label">社会人歴（勤続）</span><div class="input-field-wrap"><input type="number" min="0" id="working_years" placeholder="0"> 年</div></div>
+                        <div class="input-group"><span class="input-label">社会人歴（勤続）</span><div class="input-field-wrap"><input type="number" id="working_years" placeholder="0"> 年</div></div>
 
                         <div class="form-section-title">ご関心のあるテーマ <span class="attr-note">（複数選択可・任意）</span></div>
                         <div class="topic-grid">
@@ -566,33 +566,24 @@
                         </div>
 
                         <div class="form-section-title">収入</div>
-                        <div class="input-group"><span class="input-label">月収（額面）</span><div class="input-field-wrap"><input type="number" min="0" id="inc_gross" placeholder="0" step="0.1"> 万円</div></div>
-                        <div class="input-group"><span class="input-label">月収（手取り）</span><div class="input-field-wrap"><input type="number" min="0" id="inc_net" placeholder="0" step="0.1"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">月収（額面）</span><div class="input-field-wrap"><input type="number" id="inc_gross" placeholder="0" step="0.1"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">月収（手取り）</span><div class="input-field-wrap"><input type="number" id="inc_net" placeholder="0" step="0.1"> 万円</div></div>
                         <div class="input-group" style="align-items: flex-start; padding-top:4px;">
                             <span class="input-label" style="padding-top:8px;">ボーナス（手取り）</span>
                             <div class="input-field-wrap" style="flex-direction: column; align-items: flex-end; gap:8px;">
-                                <div>年 <input type="number" min="0" id="bonus_count" placeholder="0" style="width:50px;"> 回</div>
-                                <div>計 <input type="number" min="0" id="bonus_total" placeholder="0" step="0.1"> 万円</div>
+                                <div>年 <input type="number" id="bonus_count" placeholder="0" style="width:50px;"> 回</div>
+                                <div>計 <input type="number" id="bonus_total" placeholder="0" step="0.1"> 万円</div>
                             </div>
                         </div>
 
                         <div class="form-section-title">現在の資産・負債 <span class="attr-note">※不動産・車などは含めません</span></div>
-                        <div class="input-group"><span class="input-label">普通預金</span><div class="input-field-wrap"><input type="number" min="0" id="ast_ordinary" placeholder="0" step="0.1"> 万円</div></div>
-                        <div class="input-group"><span class="input-label">定期預金</span><div class="input-field-wrap"><input type="number" min="0" id="ast_time" placeholder="0" step="0.1"> 万円</div></div>
-                        <div class="input-group"><span class="input-label">投資信託・株式・債券 <span class="attr-note">※NISA・外貨建て含む</span></span><div class="input-field-wrap"><input type="number" min="0" id="ast_invest" placeholder="0" step="0.1"> 万円</div></div>
-                        <div class="input-group"><span class="input-label">iDeCo・企業型DC・持株会</span><div class="input-field-wrap"><input type="number" min="0" id="ast_dc" placeholder="0" step="0.1"> 万円</div></div>
-                        <div class="input-group"><span class="input-label">保険（貯蓄型・変額・外貨建てなど） <span class="attr-note">※現時点の解約返戻金</span></span><div class="input-field-wrap"><input type="number" min="0" id="ast_insurance" placeholder="0" step="0.1"> 万円</div></div>
-                        <div class="input-group"><span class="input-label">その他の金融資産 <span class="attr-note">※金・暗号資産など。財形・社内預金は定期預金へ</span></span><div class="input-field-wrap"><input type="number" min="0" id="ast_other" placeholder="0" step="0.1"> 万円</div></div>
-
-                        <div class="form-section-title">借入状況 <span class="attr-note">※資産形成とは分けて評価します</span></div>
-                        <div class="input-group sel"><span class="input-label">現在、返済中の借入はありますか？</span><div class="input-field-wrap"><select id="has_debt" onchange="onDebtChange()" required><option value="" selected disabled>選択してください</option><option value="なし">なし</option><option value="あり">あり</option></select></div></div>
-                        <div id="debt-details" style="display:none;">
-                            <div class="input-group"><span class="input-label">奨学金 残高<br><span class="attr-note">※教育のための借入として別評価</span></span><div class="input-field-wrap"><input type="number" min="0" id="debt_student" placeholder="0" step="0.1"> 万円</div></div>
-                            <div class="input-group"><span class="input-label">自動車ローン 残高</span><div class="input-field-wrap"><input type="number" min="0" id="debt_car" placeholder="0" step="0.1"> 万円</div></div>
-                            <div class="input-group"><span class="input-label">カードローン・リボ 残高<br><span class="attr-note">※1～2か月後の通常のカード決済は除く</span></span><div class="input-field-wrap"><input type="number" min="0" id="debt_card" placeholder="0" step="0.1"> 万円</div></div>
-                            <div class="input-group"><span class="input-label">その他ローン 残高</span><div class="input-field-wrap"><input type="number" min="0" id="debt_other" placeholder="0" step="0.1"> 万円</div></div>
-                            <div class="input-group"><span class="input-label">住宅ローン 残高<br><span class="attr-note">※参考情報。純金融資産からは差し引きません</span></span><div class="input-field-wrap"><input type="number" min="0" id="debt_mortgage" placeholder="0" step="0.1"> 万円</div></div>
-                        </div>
+                        <div class="input-group"><span class="input-label">普通預金</span><div class="input-field-wrap"><input type="number" id="ast_ordinary" placeholder="0" step="0.1"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">定期預金</span><div class="input-field-wrap"><input type="number" id="ast_time" placeholder="0" step="0.1"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">投資信託・株式・債券 <span class="attr-note">※NISA・外貨建て含む</span></span><div class="input-field-wrap"><input type="number" id="ast_invest" placeholder="0" step="0.1"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">iDeCo・企業型DC・持株会</span><div class="input-field-wrap"><input type="number" id="ast_dc" placeholder="0" step="0.1"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">貯蓄型保険 <span class="attr-note">※現時点の解約返戻金</span></span><div class="input-field-wrap"><input type="number" id="ast_insurance" placeholder="0" step="0.1"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">その他の金融資産</span><div class="input-field-wrap"><input type="number" id="ast_other" placeholder="0" step="0.1"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">各種ローン・奨学金<br><span class="attr-note">※残高総額（住宅ローン除く）</span></span><div class="input-field-wrap"><input type="number" id="debt_total" placeholder="0" step="0.1"> 万円</div></div>
 
                         <button type="button" class="submit-btn" id="btn-step1" onclick="submitStep1()">次へ（固定費の入力へ）</button>
                     </div>
@@ -609,8 +600,7 @@
 
         function onDualIncomeChange() {
             const v = getStr('dual_income');
-            const noSpouse = ['独身（単身）', 'ひとり親＋子ども'].includes(getStr('household'));
-            const hasSpouse = !noSpouse && (v === '共働き' || v === '片働き');
+            const hasSpouse = (v === '共働き' || v === '片働き');
             document.getElementById('spouse-emp-row').style.display = hasSpouse ? 'flex' : 'none';
             if (!hasSpouse) document.getElementById('spouse_employment').value = '';
         }
@@ -621,27 +611,7 @@
             document.getElementById('youngest-row').style.display = show ? 'flex' : 'none';
         }
 
-        function onDebtChange() {
-            const hasDebt = getStr('has_debt') === 'あり';
-            const details = document.getElementById('debt-details');
-            if (!details) return;
-            details.style.display = hasDebt ? 'block' : 'none';
-            if (!hasDebt) {
-                ['debt_student', 'debt_car', 'debt_card', 'debt_other', 'debt_mortgage'].forEach(id => {
-                    const el = document.getElementById(id);
-                    if (el) el.value = '';
-                });
-            }
-        }
 
-
-        function syncDebtPaymentFields() {
-            const fields = document.getElementById('debt-payment-fields');
-            if (!fields) return;
-            const hasDebt = userData.has_debt === 'あり';
-            fields.style.display = hasDebt ? 'block' : 'none';
-            if (!hasDebt) fields.querySelectorAll('input').forEach(el => { el.value = ''; });
-        }
         function scrollToBottom() {
             setTimeout(() => { chatMessages.scrollTop = chatMessages.scrollHeight; }, 100);
         }
@@ -668,28 +638,6 @@
         function getMoneyVal(id) {
             const el = document.getElementById(id);
             return el ? Math.round(Number(el.value) * 10000) || 0 : 0;
-        }
-
-        function validateStepInput(formId) {
-            const form = document.getElementById(formId);
-            for (const el of form.querySelectorAll('input[type="number"], select[required]')) {
-                if (!el.getClientRects().length) continue;
-                const label = el.closest('.input-group')?.querySelector('.input-label')?.textContent.trim() || '入力項目';
-                if (el.required && !el.value) {
-                    alert(label + 'を選択してください。');
-                    el.focus();
-                    return false;
-                }
-                if (el.type === 'number' && el.value !== '') {
-                    const n = Number(el.value);
-                    if (!Number.isFinite(n) || n < 0) {
-                        alert(label + 'には0以上の数値を入力してください。');
-                        el.focus();
-                        return false;
-                    }
-                }
-            }
-            return true;
         }
 
         function toggleEdit(step) {
@@ -766,19 +714,6 @@
         // Step 1: 収入・資産
         // ==========================
         function submitStep1() {
-            if (!validateStepInput('step1-form')) return;
-            if (['独身（単身）', 'ひとり親＋子ども'].includes(getStr('household'))
-                && getStr('dual_income') !== '単身（自分のみ）') {
-                alert('この世帯構成では、世帯の働き方を「単身（自分のみ）」にしてください。');
-                document.getElementById('dual_income').focus();
-                return;
-            }
-            if (!getStr('has_debt')) {
-                alert('借入状況を選択してください。');
-                document.getElementById('has_debt').focus();
-                return;
-            }
-            const previousHasDebt = userData.has_debt;
             userData.user_age = getVal('user_age');
             userData.working_years = getVal('working_years');
 
@@ -808,16 +743,7 @@
             userData.ast_dc        = getMoneyVal('ast_dc');
             userData.ast_insurance = getMoneyVal('ast_insurance');
             userData.ast_other     = getMoneyVal('ast_other');
-
-            userData.has_debt     = getStr('has_debt');
-            userData.debt_student = getMoneyVal('debt_student');
-            userData.debt_car     = getMoneyVal('debt_car');
-            userData.debt_card    = getMoneyVal('debt_card');
-            userData.debt_other   = getMoneyVal('debt_other');
-            userData.debt_mortgage = getMoneyVal('debt_mortgage');
-            // 住宅ローンは対応する住宅資産があるため、純金融資産からは差し引かない
-            userData.debt_total = userData.debt_student + userData.debt_car
-                                + userData.debt_card + userData.debt_other;
+            userData.debt_total = getMoneyVal('debt_total');
             
             // 金融資産の合計。不動産等の実物資産は含めない
             // （②の比較に使う公的調査の「金融資産保有額」の定義に合わせるため）
@@ -834,20 +760,8 @@
                 highestStep = 2;
                 document.getElementById('progressBar').style.width = "45%";
                 showTypingIndicator(generateStep2);
-            } else {
-                syncDebtPaymentFields();
-                if (previousHasDebt !== userData.has_debt && highestStep >= 3) {
-                    if (userData.has_debt === 'あり') {
-                        document.getElementById('result-row')?.remove();
-                        document.getElementById('step2-form').style.display = 'block';
-                        document.getElementById('step2-summary').style.display = 'none';
-                        scrollToFormTop('step2-form');
-                    } else {
-                        submitStep2();
-                    }
-                } else if (highestStep === 4) {
-                    calculateResult();
-                }
+            } else if (highestStep === 4) {
+                calculateResult();
             }
         }
 
@@ -872,27 +786,22 @@
                     ありがとうございます！<br>次に、毎月必ずかかっている<strong>「固定費」</strong>を教えてください。
                     
                     <div class="form-card" id="step2-form">
-                        <div class="input-group"><span class="input-label">家賃・住宅ローン<br><span style="font-size:0.7rem;font-weight:normal;">(月額)</span></span><div class="input-field-wrap"><input type="number" min="0" id="fx_rent" placeholder="0" step="0.1"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">家賃・住宅ローン<br><span style="font-size:0.7rem;font-weight:normal;">(月額)</span></span><div class="input-field-wrap"><input type="number" id="fx_rent" placeholder="0" step="0.1"> 万円</div></div>
                         
                         <div class="form-section-title">水道光熱・通信費</div>
-                        <div class="input-group"><span class="input-label">電気</span><div class="input-field-wrap"><input type="number" min="0" id="fx_elec" placeholder="0" step="0.1"> 万円</div></div>
-                        <div class="input-group"><span class="input-label">ガス</span><div class="input-field-wrap"><input type="number" min="0" id="fx_gas" placeholder="0" step="0.1"> 万円</div></div>
-                        <div class="input-group"><span class="input-label">水道</span><div class="input-field-wrap"><input type="number" min="0" id="fx_water" placeholder="0" step="0.1"> 万円</div></div>
-                        <div class="input-group"><span class="input-label">携帯電話</span><div class="input-field-wrap"><input type="number" min="0" id="fx_mobile" placeholder="0" step="0.1"> 万円</div></div>
-                        <div class="input-group"><span class="input-label">通信（ネット等）</span><div class="input-field-wrap"><input type="number" min="0" id="fx_net" placeholder="0" step="0.1"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">電気</span><div class="input-field-wrap"><input type="number" id="fx_elec" placeholder="0" step="0.1"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">ガス</span><div class="input-field-wrap"><input type="number" id="fx_gas" placeholder="0" step="0.1"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">水道</span><div class="input-field-wrap"><input type="number" id="fx_water" placeholder="0" step="0.1"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">携帯電話</span><div class="input-field-wrap"><input type="number" id="fx_mobile" placeholder="0" step="0.1"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">通信（ネット等）</span><div class="input-field-wrap"><input type="number" id="fx_net" placeholder="0" step="0.1"> 万円</div></div>
 
                         <div class="form-section-title">保険・ローン関連</div>
-                        <div class="input-group"><span class="input-label">自動車保険</span><div class="input-field-wrap"><input type="number" min="0" id="fx_ins_car" placeholder="0" step="0.1"> 万円</div></div>
-                        <div class="input-group"><span class="input-label">医療保険</span><div class="input-field-wrap"><input type="number" min="0" id="fx_ins_med" placeholder="0" step="0.1"> 万円</div></div>
-                        <div class="input-group"><span class="input-label">生命保険</span><div class="input-field-wrap"><input type="number" min="0" id="fx_ins_life" placeholder="0" step="0.1"> 万円</div></div>
-                        <div class="input-group"><span class="input-label">その他保険</span><div class="input-field-wrap"><input type="number" min="0" id="fx_ins_other" placeholder="0" step="0.1"> 万円</div></div>
-                        <div id="debt-payment-fields" style="display:none;">
-                        <div class="form-section-title">借入の月額返済</div>
-                        <div class="input-group"><span class="input-label">奨学金</span><div class="input-field-wrap"><input type="number" min="0" id="fx_student" placeholder="0" step="0.1"> 万円</div></div>
-                        <div class="input-group"><span class="input-label">自動車ローン</span><div class="input-field-wrap"><input type="number" min="0" id="fx_car_loan" placeholder="0" step="0.1"> 万円</div></div>
-                        <div class="input-group"><span class="input-label">カードローン・リボ</span><div class="input-field-wrap"><input type="number" min="0" id="fx_card_loan" placeholder="0" step="0.1"> 万円</div></div>
-                        <div class="input-group"><span class="input-label">その他ローン</span><div class="input-field-wrap"><input type="number" min="0" id="fx_other_loan" placeholder="0" step="0.1"> 万円</div></div>
-                        </div>
+                        <div class="input-group"><span class="input-label">自動車保険</span><div class="input-field-wrap"><input type="number" id="fx_ins_car" placeholder="0" step="0.1"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">医療保険</span><div class="input-field-wrap"><input type="number" id="fx_ins_med" placeholder="0" step="0.1"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">生命保険</span><div class="input-field-wrap"><input type="number" id="fx_ins_life" placeholder="0" step="0.1"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">その他保険</span><div class="input-field-wrap"><input type="number" id="fx_ins_other" placeholder="0" step="0.1"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">その他ローン<br><span style="font-size:0.7rem;font-weight:normal;">(車・カード等 月額)</span></span><div class="input-field-wrap"><input type="number" id="fx_loan" placeholder="0" step="0.1"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">奨学金(月額返済)</span><div class="input-field-wrap"><input type="number" id="fx_scholarship" placeholder="0" step="0.1"> 万円</div></div>
 
                         <button type="button" class="submit-btn" id="btn-step2" onclick="submitStep2()">次へ（変動費の入力へ）</button>
                     </div>
@@ -904,29 +813,20 @@
                 </div>
             </div>`;
             chatMessages.insertAdjacentHTML('beforeend', html);
-            syncDebtPaymentFields();
             scrollToFormTop('step2-form');
         }
 
         function submitStep2() {
-            if (!validateStepInput('step2-form')) return;
             userData.fx_rent = getMoneyVal('fx_rent');
             userData.fx_elec = getMoneyVal('fx_elec'); userData.fx_gas = getMoneyVal('fx_gas'); userData.fx_water = getMoneyVal('fx_water');
             userData.fx_mobile = getMoneyVal('fx_mobile'); userData.fx_net = getMoneyVal('fx_net');
             userData.fx_ins_car = getMoneyVal('fx_ins_car'); userData.fx_ins_med = getMoneyVal('fx_ins_med'); 
             userData.fx_ins_life = getMoneyVal('fx_ins_life'); userData.fx_ins_other = getMoneyVal('fx_ins_other');
-            userData.fx_student   = getMoneyVal('fx_student');
-            userData.fx_car_loan  = getMoneyVal('fx_car_loan');
-            userData.fx_card_loan = getMoneyVal('fx_card_loan');
-            userData.fx_other_loan = getMoneyVal('fx_other_loan');
-            // 旧列との互換性を維持
-            userData.fx_scholarship = userData.fx_student;
-            userData.fx_loan = userData.fx_car_loan + userData.fx_card_loan + userData.fx_other_loan;
+            userData.fx_loan = getMoneyVal('fx_loan'); userData.fx_scholarship = getMoneyVal('fx_scholarship');
             
             userData.monthlyFixed = userData.fx_rent + userData.fx_elec + userData.fx_gas + userData.fx_water + 
                                     userData.fx_mobile + userData.fx_net + userData.fx_ins_car + userData.fx_ins_med + 
-                                    userData.fx_ins_life + userData.fx_ins_other + userData.fx_student
-                                    + userData.fx_car_loan + userData.fx_card_loan + userData.fx_other_loan;
+                                    userData.fx_ins_life + userData.fx_ins_other + userData.fx_loan + userData.fx_scholarship;
 
             document.getElementById('step2-form').style.display = 'none';
             document.getElementById('step2-summary').style.display = 'block';
@@ -950,7 +850,7 @@
             <div class="input-group other-item">
                 <input type="text" class="custom-label-input other-label" placeholder="例: サブスク代">
                 <div class="input-field-wrap">
-                    <input type="number" min="0" class="other-value" placeholder="0" step="0.1"> 万円
+                    <input type="number" class="other-value" placeholder="0" step="0.1"> 万円
                     <button type="button" class="remove-btn" onclick="this.parentElement.parentElement.remove()">×</button>
                 </div>
             </div>`;
@@ -976,25 +876,25 @@
                     
                     <div class="form-card" id="step3-form">
                         <div class="form-section-title">食費・交通費</div>
-                        <div class="input-group"><span class="input-label">食費（自宅）</span><div class="input-field-wrap"><input type="number" min="0" id="vr_food_home" placeholder="0" step="0.1"> 万円</div></div>
-                        <div class="input-group"><span class="input-label">食費（外食）</span><div class="input-field-wrap"><input type="number" min="0" id="vr_food_out" placeholder="0" step="0.1"> 万円</div></div>
-                        <div class="input-group"><span class="input-label">ガソリン</span><div class="input-field-wrap"><input type="number" min="0" id="vr_gasoline" placeholder="0" step="0.1"> 万円</div></div>
-                        <div class="input-group"><span class="input-label">その他交通</span><div class="input-field-wrap"><input type="number" min="0" id="vr_transport" placeholder="0" step="0.1"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">食費（自宅）</span><div class="input-field-wrap"><input type="number" id="vr_food_home" placeholder="0" step="0.1"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">食費（外食）</span><div class="input-field-wrap"><input type="number" id="vr_food_out" placeholder="0" step="0.1"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">ガソリン</span><div class="input-field-wrap"><input type="number" id="vr_gasoline" placeholder="0" step="0.1"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">その他交通</span><div class="input-field-wrap"><input type="number" id="vr_transport" placeholder="0" step="0.1"> 万円</div></div>
                         
                         <div class="form-section-title">生活・教育・娯楽</div>
-                        <div class="input-group"><span class="input-label">医療費</span><div class="input-field-wrap"><input type="number" min="0" id="vr_medical" placeholder="0" step="0.1"> 万円</div></div>
-                        <div class="input-group"><span class="input-label">学費・習い事</span><div class="input-field-wrap"><input type="number" min="0" id="vr_edu" placeholder="0" step="0.1"> 万円</div></div>
-                        <div class="input-group"><span class="input-label">被服</span><div class="input-field-wrap"><input type="number" min="0" id="vr_clothes" placeholder="0" step="0.1"> 万円</div></div>
-                        <div class="input-group"><span class="input-label">美容室</span><div class="input-field-wrap"><input type="number" min="0" id="vr_hair" placeholder="0" step="0.1"> 万円</div></div>
-                        <div class="input-group"><span class="input-label">化粧品</span><div class="input-field-wrap"><input type="number" min="0" id="vr_cosme" placeholder="0" step="0.1"> 万円</div></div>
-                        <div class="input-group"><span class="input-label">その他娯楽・趣味</span><div class="input-field-wrap"><input type="number" min="0" id="vr_hobby" placeholder="0" step="0.1"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">医療費</span><div class="input-field-wrap"><input type="number" id="vr_medical" placeholder="0" step="0.1"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">学費・習い事</span><div class="input-field-wrap"><input type="number" id="vr_edu" placeholder="0" step="0.1"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">被服</span><div class="input-field-wrap"><input type="number" id="vr_clothes" placeholder="0" step="0.1"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">美容室</span><div class="input-field-wrap"><input type="number" id="vr_hair" placeholder="0" step="0.1"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">化粧品</span><div class="input-field-wrap"><input type="number" id="vr_cosme" placeholder="0" step="0.1"> 万円</div></div>
+                        <div class="input-group"><span class="input-label">その他娯楽・趣味</span><div class="input-field-wrap"><input type="number" id="vr_hobby" placeholder="0" step="0.1"> 万円</div></div>
                         
                         <div class="form-section-title">その他（項目名を自由に追加できます）</div>
                         <div id="dynamic-other-container">
                             <div class="input-group other-item">
                                 <input type="text" class="custom-label-input other-label" placeholder="例: 日用品費">
                                 <div class="input-field-wrap">
-                                    <input type="number" min="0" class="other-value" placeholder="0" step="0.1"> 万円
+                                    <input type="number" class="other-value" placeholder="0" step="0.1"> 万円
                                     <button type="button" class="remove-btn" onclick="this.parentElement.parentElement.remove()">×</button>
                                 </div>
                             </div>
@@ -1015,7 +915,6 @@
         }
 
         function submitStep3() {
-            if (!validateStepInput('step3-form')) return;
             userData.vr_food_home = getMoneyVal('vr_food_home'); userData.vr_food_out = getMoneyVal('vr_food_out');
             userData.vr_gasoline = getMoneyVal('vr_gasoline'); userData.vr_transport = getMoneyVal('vr_transport');
             userData.vr_medical = getMoneyVal('vr_medical'); userData.vr_edu = getMoneyVal('vr_edu');
@@ -1163,10 +1062,8 @@
                     <div class="cf-row"><span class="indent">美容室</span><span>${yen(userData.vr_hair)} 円</span></div>
                     <div class="cf-row"><span class="indent">化粧品</span><span>${yen(userData.vr_cosme)} 円</span></div>
                     <div class="cf-row"><span class="indent">その他娯楽・趣味</span><span>${yen(userData.vr_hobby)} 円</span></div>
-                    <div class="cf-row"><span class="indent">奨学金（返済）</span><span>${yen(userData.fx_student)} 円</span></div>
-                    <div class="cf-row"><span class="indent">自動車ローン（返済）</span><span>${yen(userData.fx_car_loan)} 円</span></div>
-                    <div class="cf-row"><span class="indent">カードローン・リボ（返済）</span><span>${yen(userData.fx_card_loan)} 円</span></div>
-                    <div class="cf-row"><span class="indent">その他ローン（返済）</span><span>${yen(userData.fx_other_loan)} 円</span></div>
+                    <div class="cf-row"><span class="indent">その他ローン(返済)</span><span>${yen(userData.fx_loan)} 円</span></div>
+                    <div class="cf-row"><span class="indent">奨学金(返済)</span><span>${yen(userData.fx_scholarship)} 円</span></div>
                     ${otherItemsHtml}
                     <div class="cf-row total"><span>合計 ③</span><span>${yen(r.monthlyTotalExp)} 円</span></div>
                     <div class="cf-row total"><span>【年間支出】⑤ <br><span style="font-size:0.7rem; font-weight:normal;">③×12ヵ月</span></span><span>${yen(r.annualTotalExp)} 円</span></div>
@@ -1176,16 +1073,11 @@
                     <div class="cf-row"><span class="indent">定期預金</span><span>${yen(userData.ast_time)} 円</span></div>
                     <div class="cf-row"><span class="indent">投資信託・株式・債券</span><span>${yen(userData.ast_invest)} 円</span></div>
                     <div class="cf-row"><span class="indent">iDeCo・企業型DC・持株会</span><span>${yen(userData.ast_dc)} 円</span></div>
-                    <div class="cf-row"><span class="indent">保険（解約返戻金）</span><span>${yen(userData.ast_insurance)} 円</span></div>
+                    <div class="cf-row"><span class="indent">貯蓄型保険（解約返戻金）</span><span>${yen(userData.ast_insurance)} 円</span></div>
                     <div class="cf-row"><span class="indent">その他の金融資産</span><span>${yen(userData.ast_other)} 円</span></div>
                     <div class="cf-row total"><span>金融資産 合計</span><span>${yen(userData.totalAssets)} 円</span></div>
-                    <div class="cf-row"><span class="indent">奨学金残高</span><span>${yen(userData.debt_student)} 円</span></div>
-                    <div class="cf-row"><span class="indent">自動車ローン残高</span><span>${yen(userData.debt_car)} 円</span></div>
-                    <div class="cf-row"><span class="indent">カードローン・リボ残高</span><span>${yen(userData.debt_card)} 円</span></div>
-                    <div class="cf-row"><span class="indent">その他ローン残高</span><span>${yen(userData.debt_other)} 円</span></div>
-                    <div class="cf-row" style="color:#b91c1c;"><span class="indent">住宅以外の借入合計</span><span>▲ ${yen(userData.debt_total)} 円</span></div>
-                    <div class="cf-row total" style="color:#0f172a;"><span>【返済考慮後の現在地】<br><span style="font-size:0.7rem;font-weight:normal;">※評価点には使用しません</span></span><span>${yen(userData.netWorth)} 円</span></div>
-                    <div class="cf-row"><span class="indent">住宅ローン残高（参考）</span><span>${yen(userData.debt_mortgage)} 円</span></div>
+                    <div class="cf-row" style="color:#b91c1c;"><span class="indent">負債総額</span><span>▲ ${yen(userData.debt_total)} 円</span></div>
+                    <div class="cf-row total" style="color:#0f172a;"><span>【純金融資産額】</span><span>${yen(userData.netWorth)} 円</span></div>
                 </div>
             `;
 
@@ -1225,22 +1117,12 @@
                             <div class="assumption-title">①「残す力」の算定根拠</div>
                             <div class="assumption-row"><span>就業期間</span><span><strong>${r.careerStartAge}歳 〜 ${userData.user_age}歳（${r.careerYears}年）</strong></span></div>
                             <div class="assumption-row"><span>推計した累計手取り収入</span><span><strong>${man(r.lifetimeIncome)}</strong></span></div>
-                            <div class="assumption-row"><span>これまで形成した金融資産</span><span><strong>${man(userData.totalAssets)}</strong></span></div>
+                            <div class="assumption-row"><span>現在の純金融資産</span><span><strong>${man(userData.netWorth)}</strong></span></div>
                             <div class="assumption-src">
                                 出典：厚生労働省「令和7年賃金構造基本統計調査」第2表（性、年齢階級別賃金）<br>
                                 ※現在の収入を起点に、性別・年齢別の賃金カーブで過去の各年の収入水準を割り戻して累計しています。「現在の年収 × 勤続年数」で代用すると過去の収入を多く見積もってしまうためです。<br>
-                                ※転職・休職・独立などの個別のご事情は反映されません。借入はこの評価から差し引かず、下の「借入・返済コンディション」で別に確認します。
+                                ※転職・休職・独立などの個別のご事情は反映されません。
                             </div>
-                        </div>
-
-                        <div class="assumption-box">
-                            <div class="assumption-title">借入・返済コンディション</div>
-                            <div style="margin:4px 0 9px;"><span class="ind-eval ${r.debtClass}">${r.debtCondition}</span></div>
-                            <div class="assumption-row"><span>住宅以外の借入残高</span><span><strong>${man(r.nonHousingDebt)}</strong></span></div>
-                            <div class="assumption-row"><span>毎月の返済額</span><span><strong>${man(r.monthlyDebtPayment)}</strong></span></div>
-                            <div class="assumption-row"><span>手取り年収に対する返済割合</span><span><strong>${r.debtPaymentRate.toFixed(1)}%</strong></span></div>
-                            <div class="assumption-row"><span>住宅ローン残高</span><span><strong>${man(r.mortgageBalance)}（参考）</strong></span></div>
-                            <div class="assumption-src">${r.debtMessage}<br>※借入残高だけで家計を悪く判定せず、借入の種類と毎月の返済負担を分けて確認しています。住宅ローンは対応する住宅資産があるため、純金融資産から差し引いていません。</div>
                         </div>
 
                         <div class="assumption-box">
@@ -1258,13 +1140,13 @@
 
                         <div class="assumption-box">
                             <div class="assumption-title">③「働かせる力」の算定根拠</div>
-                            <div class="assumption-row"><span>現預金（普通・定期）</span><span><strong>${man(r.cashAssets)}</strong></span></div>
-                            <div class="assumption-row"><span>生活防衛資金の目安</span><span><strong>${man(r.livingDefenseFund)}</strong></span></div>
                             <div class="assumption-row"><span>運用に回っている資産</span><span><strong>${man(r.operationalAssets)}</strong></span></div>
-                            ${r.cashShort && r.operationalAssets > 0 ? `<div class="assumption-row stack"><span>ご確認ください</span><span><strong>現預金が生活防衛資金の目安を下回っています。運用資産は途中で現金化すると元本割れする場合があるため、まず手元資金の確保をおすすめします。</strong></span></div>` : ''}
+                            <div class="assumption-row"><span>生活防衛資金の目安</span><span><strong>${man(r.livingDefenseFund)}</strong></span></div>
+                            <div class="assumption-row"><span>金融資産の合計</span><span><strong>${man(userData.totalAssets)}</strong></span></div>
                             <div class="assumption-src">
-                                ※「運用に回っている資産」は、金融資産のうち現預金以外（投資信託・株式・債券、iDeCo・企業型DC・持株会、保険の解約返戻金、その他）の合計です。商品の種類による優劣はつけていません。<br>
-                                ※生活防衛資金は月間支出の6か月分としています。現預金がこれを下回る場合は、稼働率にかかわらず評価を「注意（現金不足）」としています。
+                                ※「運用に回っている資産」は、投資信託・株式・債券と、iDeCo・企業型DC・持株会の合計です。<br>
+                                ※貯蓄型保険は利回りが低く途中で引き出しにくいため、運用資産には含めていません。<br>
+                                ※生活防衛資金は月間支出の6か月分としています。これを超える部分が「運用に回せる余力」です。
                             </div>
                         </div>
 
@@ -1295,7 +1177,7 @@
             </div>`;
 
             chatMessages.insertAdjacentHTML('beforeend', resultHtml);
-            scrollToFormTop('result-row');
+            scrollToBottom();
             setTimeout(animateNumbers, 100);
         }
     </script>

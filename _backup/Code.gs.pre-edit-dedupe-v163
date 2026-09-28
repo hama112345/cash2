@@ -62,9 +62,7 @@ const COLS = [
   // --- v1.6.0 で追加（借入を種類別に分離。既存列を守るため末尾に追加）---
   'has_debt', 'debt_student', 'debt_car', 'debt_card', 'debt_other', 'debt_mortgage',
   'fx_student', 'fx_car_loan', 'fx_card_loan', 'fx_other_loan',
-  'debtPaymentRate', 'debtCondition', 'debtMessage',
-  // --- v1.7.0 で追加（③を「現預金以外＝運用資産」に変更。operationalAssets の意味も変わる）---
-  'cashAssets'
+  'debtPaymentRate', 'debtCondition', 'debtMessage'
 ];
 
 
@@ -588,14 +586,10 @@ function judge(d) {
 
   // --- ③ お金を「働かせる力」（余剰資金の投資稼働率）---------------------------
   const livingDefenseFund  = monthlyTotalExp * 6;
-  // 運用資産は「金融資産のうち現預金以外」と定義する。投資信託・iDeCo・保険などの
-  // 商品の良し悪しは判断せず、「現預金として寝かせているか否か」だけを見る。
-  const cashAssets         = num(d.ast_ordinary) + num(d.ast_time);
-  const operationalAssets  = Math.max(0, totalAssets - cashAssets);
+  // 運用に回っている資産。貯蓄型保険は利回りが低く流動性も乏しいため、
+  // 「運用資産」ではなく「動いていない資産」として扱う（その旨は結果画面に明記）
+  const operationalAssets  = num(d.ast_invest) + num(d.ast_dc);
   const effBase            = totalAssets - livingDefenseFund;
-  // 現預金が生活防衛資金に届いていない。運用資産は途中で現金化すると元本割れする
-  // ことがあるため、この場合は稼働率が高くても評価を「注意」で止める。
-  const cashShort          = cashAssets < livingDefenseFund;
 
   let efficiencyRate = 0;
   if (effBase > 0)                  { efficiencyRate = (operationalAssets / effBase) * 100; }
@@ -618,11 +612,6 @@ function judge(d) {
     else if (efficiencyRate >= 35) { score3 = 4; text3 = '良好';   class3 = 'eval-4'; }
     else if (efficiencyRate >= 20) { score3 = 3; text3 = '標準';   class3 = 'eval-3'; }
     else                           { score3 = 1; text3 = '要改善'; class3 = 'eval-1'; }
-  }
-
-  // 手元資金が足りないのに運用に回している場合は、稼働率が高くても「注意」にとどめる
-  if (cashShort && operationalAssets > 0 && score3 > 2) {
-    score3 = 2; text3 = '注意(現金不足)'; class3 = 'eval-2';
   }
 
   // --- ④ 労働から「自由になる力」（早期リタイア達成率） ----------------------------------------------
@@ -773,8 +762,6 @@ function judge(d) {
     // ③の内訳（運用に回っている資産）
     operationalAssets:  operationalAssets,
     livingDefenseFund:  livingDefenseFund,
-    cashAssets:         cashAssets,
-    cashShort:          cashShort,
 
     // 借入・返済コンディション（総合点には含めない）
     nonHousingDebt:     nonHousingDebt,
@@ -822,20 +809,7 @@ function appendRow(body, d, r) {
     rec.otherItems     = (d.otherItems || [])
       .map(x => x.label + ':' + x.val).join(' / ');
 
-    const rowValues = COLS.map(k => (rec[k] === undefined || rec[k] === null) ? '' : rec[k]);
-    // 同じ画面で入力を修正した場合は、同一回答を更新して重複集計を防ぐ。
-    if (rec.sessionId && rec.consentedAt && sh.getLastRow() > 1) {
-      const matches = sh.getRange(2, 7, sh.getLastRow() - 1, 1)
-        .createTextFinder(rec.consentedAt).matchEntireCell(true).findAll();
-      for (const match of matches) {
-        const row = match.getRow();
-        if (sh.getRange(row, 2).getValue() === rec.sessionId) {
-          sh.getRange(row, 1, 1, COLS.length).setValues([rowValues]);
-          return;
-        }
-      }
-    }
-    sh.appendRow(rowValues);
+    sh.appendRow(COLS.map(k => (rec[k] === undefined || rec[k] === null) ? '' : rec[k]));
   } finally {
     lock.releaseLock();
   }
