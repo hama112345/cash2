@@ -472,8 +472,6 @@ function doPost(e) {
     const d = body.data || {};
     const invalid = validateSubmittedNumbers(d);
     if (invalid) return json({ ok: false, error: invalid + ' は0以上の数値で入力してください' });
-    const outOfRange = validateSubmittedRanges(d);
-    if (outOfRange) return json({ ok: false, error: outOfRange });
     const result = judge(d);
 
     try {
@@ -489,24 +487,6 @@ function doPost(e) {
     console.error(err);
     return json({ ok: false, error: String(err) });
   }
-}
-
-/**
- * 常識的な範囲を超える値を弾く。画面側（checkStep1Ranges）と同じ基準で、
- * 画面を経由せずに送られた場合や古い画面から送られた場合の保険として置く。
- */
-function validateSubmittedRanges(d) {
-  const n = function (v) { return Number(v) || 0; };
-  const age = n(d.user_age);
-  if (age < 18 || age > 100) return '年齢は18〜100歳の範囲で入力してください';
-  if (n(d.working_years) > age - 15) return '社会人歴が年齢に対して長すぎます';
-  if (d.children && d.children !== '0人' && n(d.youngest_child_age) > age - 15) {
-    return 'お子さまの年齢がご本人の年齢に対して大きすぎます';
-  }
-  const bonusCount = n(d.bonus_count);
-  if (bonusCount > 12 || !Number.isInteger(bonusCount)) return 'ボーナスの回数は0〜12回で入力してください';
-  if (n(d.inc_gross) > 0 && n(d.inc_net) > n(d.inc_gross)) return '月収（手取り）が額面を上回っています';
-  return '';
 }
 
 function validateSubmittedNumbers(d) {
@@ -617,10 +597,6 @@ function judge(d) {
   // ことがあるため、この場合は稼働率が高くても評価を「注意」で止める。
   const cashShort          = cashAssets < livingDefenseFund;
 
-  // 金融資産が生活防衛資金にも届かない場合は「運用に回せる余力」が無いので、
-  // 稼働率は算出しない（画面では「—」表示、記録は空欄）。
-  // 評価の分岐は従来どおり内部値で行う（運用資産があれば「注意(現金不足)」になる）。
-  const noSurplus = effBase <= 0;
   let efficiencyRate = 0;
   if (effBase > 0)                  { efficiencyRate = (operationalAssets / effBase) * 100; }
   else if (operationalAssets > 0)   { efficiencyRate = 100; }
@@ -759,8 +735,7 @@ function judge(d) {
     careerStartAge:   career.startAge,
     wageSource:       WAGE_SOURCE,
 
-    efficiencyRate:   noSurplus ? null : r1(efficiencyRate),
-    noSurplus:        noSurplus,
+    efficiencyRate:   r1(efficiencyRate),
     fireProgressRate: r1(fireProgressRate),
 
     // ②の前提（同年代・同世帯類型との比較）

@@ -466,7 +466,7 @@
         const CONFIG = {
             endpoint:       'https://script.google.com/macros/s/AKfycbwgldxZN5HQGHp9OvU6UhV6LGcqPKeolzozX7hDAQBay35HA3PMcJQOOgMji5bupyaK/exec',
             token:          'test',
-            appVersion:     'v1.8.0',
+            appVersion:     'v1.7.0',
             consentVersion: '2026-09-21'
         };
 
@@ -619,7 +619,6 @@
             const v = getStr('children');
             const show = (v && v !== '0人');
             document.getElementById('youngest-row').style.display = show ? 'flex' : 'none';
-            if (!show) document.getElementById('youngest_child_age').value = '';
         }
 
         function onDebtChange() {
@@ -691,68 +690,6 @@
                 }
             }
             return true;
-        }
-
-        // ありえない値は計算自体は通ってしまうため、ここで止める
-        function checkStep1Ranges() {
-            const fail = (id, msg) => { alert(msg); document.getElementById(id).focus(); return false; };
-            const age = getVal('user_age');
-            if (age < 18 || age > 100) {
-                return fail('user_age', '年齢は18〜100歳の範囲で入力してください。');
-            }
-            if (getVal('working_years') > age - 15) {
-                return fail('working_years', '社会人歴は「年齢−15年」（' + (age - 15) + '年）以内で入力してください。');
-            }
-            if (document.getElementById('youngest-row').style.display !== 'none'
-                && getVal('youngest_child_age') > age - 15) {
-                return fail('youngest_child_age', 'いちばん下のお子さまの年齢は「ご本人の年齢−15歳」（' + (age - 15) + '歳）以内で入力してください。');
-            }
-            const bonusCount = getVal('bonus_count');
-            if (bonusCount > 12 || !Number.isInteger(bonusCount)) {
-                return fail('bonus_count', 'ボーナスの回数は0〜12回の整数で入力してください。');
-            }
-            if (getVal('inc_gross') > 0 && getVal('inc_net') > getVal('inc_gross')) {
-                return fail('inc_net', '月収（手取り）は月収（額面）以下の金額で入力してください。');
-            }
-            return true;
-        }
-
-        // 手取り月収を上回る支出（10万円以下は除く）は入力ミスの可能性が高い。
-        // 実際にありうる金額でもあるので、止めずに確認だけする。
-        const OUTLIER_FLOOR_YEN = 100000;
-        function confirmOutliers(formId) {
-            const limit = Math.max(userData.inc_net || 0, OUTLIER_FLOOR_YEN);
-            const flagged = [];
-            document.getElementById(formId).querySelectorAll('input[type="number"]').forEach(el => {
-                if (!el.getClientRects().length || el.value === '') return;
-                if (Math.round(Number(el.value) * 10000) <= limit) return;
-                const row = el.closest('.input-group');
-                const label = row?.querySelector('.input-label')?.textContent.trim()
-                           || row?.querySelector('.other-label')?.value.trim()
-                           || 'その他支出';
-                flagged.push('・' + label + '：' + Number(el.value) + '万円');
-            });
-            if (!flagged.length) return true;
-            return confirm('次の金額が手取り月収を上回っています。入力内容に誤りはありませんか？\n\n'
-                + flagged.join('\n') + '\n\n「OK」を押すとこのまま進みます。');
-        }
-
-        // 借入残高があるのに毎月の返済額が0円の場合は、入力漏れの可能性があるので確認する
-        function confirmDebtPayments() {
-            if (userData.has_debt !== 'あり') return true;
-            const pairs = [
-                ['奨学金',             userData.debt_student,  'fx_student'],
-                ['自動車ローン',       userData.debt_car,      'fx_car_loan'],
-                ['カードローン・リボ', userData.debt_card,     'fx_card_loan'],
-                ['その他ローン',       userData.debt_other,    'fx_other_loan'],
-                ['住宅ローン（「家賃・住宅ローン」欄）', userData.debt_mortgage, 'fx_rent']
-            ];
-            const missing = pairs
-                .filter(([, balance, id]) => balance > 0 && getMoneyVal(id) === 0)
-                .map(([name]) => '・' + name);
-            if (!missing.length) return true;
-            return confirm('借入残高があるのに、毎月の返済額が0円になっています。\n\n'
-                + missing.join('\n') + '\n\nこのまま進んでよろしいですか？');
         }
 
         function toggleEdit(step) {
@@ -830,7 +767,6 @@
         // ==========================
         function submitStep1() {
             if (!validateStepInput('step1-form')) return;
-            if (!checkStep1Ranges()) return;
             if (['独身（単身）', 'ひとり親＋子ども'].includes(getStr('household'))
                 && getStr('dual_income') !== '単身（自分のみ）') {
                 alert('この世帯構成では、世帯の働き方を「単身（自分のみ）」にしてください。');
@@ -974,8 +910,6 @@
 
         function submitStep2() {
             if (!validateStepInput('step2-form')) return;
-            if (!confirmDebtPayments()) return;
-            if (!confirmOutliers('step2-form')) return;
             userData.fx_rent = getMoneyVal('fx_rent');
             userData.fx_elec = getMoneyVal('fx_elec'); userData.fx_gas = getMoneyVal('fx_gas'); userData.fx_water = getMoneyVal('fx_water');
             userData.fx_mobile = getMoneyVal('fx_mobile'); userData.fx_net = getMoneyVal('fx_net');
@@ -1082,7 +1016,6 @@
 
         function submitStep3() {
             if (!validateStepInput('step3-form')) return;
-            if (!confirmOutliers('step3-form')) return;
             userData.vr_food_home = getMoneyVal('vr_food_home'); userData.vr_food_out = getMoneyVal('vr_food_out');
             userData.vr_gasoline = getMoneyVal('vr_gasoline'); userData.vr_transport = getMoneyVal('vr_transport');
             userData.vr_medical = getMoneyVal('vr_medical'); userData.vr_edu = getMoneyVal('vr_edu');
@@ -1278,7 +1211,7 @@
                             </div>
                             <div class="indicator-card">
                                 <span class="ind-title">③ お金を「働かせる力」<br><span style="font-size:0.65rem; font-weight:normal;">(余剰資金の投資稼働率)</span></span>
-                                <span class="ind-value">${r.noSurplus ? '—' : `<span class="count-up" data-val="${r.efficiencyRate}">0.0</span> <span style="font-size:0.8rem;">%</span>`}</span>
+                                <span class="ind-value"><span class="count-up" data-val="${r.efficiencyRate}">0.0</span> <span style="font-size:0.8rem;">%</span></span>
                                 <span class="ind-eval ${r.class3}">${r.text3}</span>
                             </div>
                             <div class="indicator-card">
@@ -1328,7 +1261,6 @@
                             <div class="assumption-row"><span>現預金（普通・定期）</span><span><strong>${man(r.cashAssets)}</strong></span></div>
                             <div class="assumption-row"><span>生活防衛資金の目安</span><span><strong>${man(r.livingDefenseFund)}</strong></span></div>
                             <div class="assumption-row"><span>運用に回っている資産</span><span><strong>${man(r.operationalAssets)}</strong></span></div>
-                            ${r.noSurplus ? `<div class="assumption-row stack"><span>稼働率について</span><span><strong>金融資産の合計が生活防衛資金の目安に届いていないため、「運用に回せる余力」がまだない状態です。稼働率は算出していません。</strong></span></div>` : ''}
                             ${r.cashShort && r.operationalAssets > 0 ? `<div class="assumption-row stack"><span>ご確認ください</span><span><strong>現預金が生活防衛資金の目安を下回っています。運用資産は途中で現金化すると元本割れする場合があるため、まず手元資金の確保をおすすめします。</strong></span></div>` : ''}
                             <div class="assumption-src">
                                 ※「運用に回っている資産」は、金融資産のうち現預金以外（投資信託・株式・債券、iDeCo・企業型DC・持株会、保険の解約返戻金、その他）の合計です。商品の種類による優劣はつけていません。<br>
